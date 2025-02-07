@@ -1,3 +1,8 @@
 ^DeeDee\.Rproj$
 ^\.Rproj\.user$
 ^LICENSE\.md$
+^TODO\.md$
+^_pkgdown\.yml$
+^docs$
+^pkgdown$
+^\.github$

@@ -1,0 +1,18 @@
+citHeader("DeeDeeExperiment is described in the following publication:")
+
+citEntry(
+  entry  = "Article",
+  title  = "TODO",
+  author = personList(
+    as.person("Lea Rothörl"),
+    as.person("Federico Marini")),
+  journal = "TODO",
+  year    = "TODO",
+  volume  = "TODO",
+  number  = "TODO",
+  pages   = "TODO",
+  doi     = "https://doi.org/TODO",
+  textVersion = paste0(
+    "TODO"
+  )
+)

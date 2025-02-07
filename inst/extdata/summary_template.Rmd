@@ -15,10 +15,12 @@ always_allow_html: yes
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE,
-                      warning = FALSE,
-                      message = FALSE,
-                      error = TRUE)
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning = FALSE,
+  message = FALSE,
+  error = TRUE
+)
 ```
 
 ## About this document
@@ -27,24 +29,25 @@ This document contains the results of running all main DeeDee functions on your 
 
 Your contrasts:
 ```{r echo = TRUE}
-names(deedee_list)
+dea(dde)
 ```
 
 
-
 ```{r echo = FALSE, results = FALSE}
-library(DeeDee)
+library("DeeDee")
 ```
 
 
 ## DeeDee scatter plot
+
 ```{r echo = TRUE}
-  deedee_scatter(data = deedee_list,
-                 pthresh = pthresh,
-                 select1 = scatter_select1,
-                 select2 = scatter_select2,
-                 color_by = scatter_color_by)
+deedee_scatter(dde = dde,
+               pthresh = pthresh,
+               select1 = scatter_select1,
+               select2 = scatter_select2,
+               color_by = scatter_color_by)
 ```
+
 Your parameters: 
 
 * pthresh = `r pthresh` 
@@ -55,15 +58,17 @@ Your parameters:
 ***
 
 ## DeeDee heatmap
+
 ```{r echo = TRUE}
-  deedee_heatmap(data = deedee_list,
-                 pthresh = pthresh,
-                 show_first = heatmap_show_first,
-                 show_gene_names = heatmap_show_gene_names,
-                 dist = heatmap_dist,
-                 clust = heatmap_clust,
-                 show_na = heatmap_show_na)
+deedee_heatmap(dde = dde,
+               pthresh = pthresh,
+               show_first = heatmap_show_first,
+               show_gene_names = heatmap_show_gene_names,
+               dist = heatmap_dist,
+               clust = heatmap_clust,
+               show_na = heatmap_show_na)
 ```
+
 Your parameters: 
 
 * pthresh = `r pthresh` 
@@ -76,11 +81,13 @@ Your parameters:
 ***
 
 ## DeeDee Venn diagram
+
 ```{r echo = TRUE}
-  deedee_venn(data = deedee_list,
-              pthresh = pthresh,
-              mode = venn_mode)
+deedee_venn(dde = dde,
+            pthresh = pthresh,
+            mode = venn_mode)
 ```
+
 Your parameters: 
 
 * pthresh = `r pthresh` 
@@ -89,12 +96,14 @@ Your parameters:
 ***
 
 ## DeeDee UpSet plot
+
 ```{r echo = TRUE}
-  deedee_upset(data = deedee_list,
-               pthresh = pthresh,
-               mode = upset_mode,
-               min_setsize = upset_min_setsize)
+deedee_upset(dde = dde,
+             pthresh = pthresh,
+             mode = upset_mode,
+             min_setsize = upset_min_setsize)
 ```
+
 Your parameters: 
 
 * pthresh = `r pthresh` 
@@ -102,12 +111,15 @@ Your parameters:
 * min_setsize = `r upset_min_setsize`
 
 ***
+
 ## DeeDee Q-Q plot
+
 ```{r echo = TRUE}
-  deedee_qqmult(data = deedee_list,
-                pthresh = pthresh,
-                ref = qqmult_ref)
+deedee_qqmult(dde = dde,
+              pthresh = pthresh,
+              ref = qqmult_ref)
 ```
+
 Your parameters: 
 
 * pthresh = `r pthresh`
@@ -116,13 +128,15 @@ Your parameters:
 ***
 
 ## DeeDee CAT plot
+
 ```{r echo = TRUE}
-  deedee_cat(data = deedee_list,
-             pthresh = pthresh,
-             ref = cat_ref,
-             maxrank = cat_maxrank,
-             mode = cat_mode)
+deedee_cat(dde = dde,
+           pthresh = pthresh,
+           ref = cat_ref,
+           maxrank = cat_maxrank,
+           mode = cat_mode)
 ```
+
 Your parameters: 
 
 * pthresh = `r pthresh` 
@@ -133,10 +147,7 @@ Your parameters:
 ***
 
 ## Session info {-}
+
 ```{r}
 sessionInfo()
 ```
-
-
-
-

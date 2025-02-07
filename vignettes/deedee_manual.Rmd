@@ -1,36 +1,188 @@
 ---
-title: "DeeDee User Guide"
+title: >
+  The `DeeDee` User's Guide
 author:
 - name: Lea Rothörl
-  affiliation: Institute of Medical Biostatistics, Epidemiology and Informatics (IMBEI),
-    Mainz
-date: "`r Sys.Date()`"
-output:
-  html_document:
-    toc: yes
-    toc_float: yes
-    theme: cosmo
+  affiliation: 
+  - Institute of Medical Biostatistics, Epidemiology and Informatics (IMBEI), Mainz
+- name: Federico Marini
+  affiliation: 
+  - Institute of Medical Biostatistics, Epidemiology and Informatics (IMBEI), Mainz
+  - Research Center for Immunotherapy (FZI), Mainz
+  email: marinif@uni-mainz.de
+date: "`r BiocStyle::doc_date()`"
+package: "`r BiocStyle::pkg_ver('DeeDee')`"
+output: 
+  BiocStyle::html_document:
+    toc_float: true
     code_folding: show
     code_download: yes
-  pdf_document:
-    toc: yes
-vignette: |
-  %\VignetteIndexEntry{The DeeDee User's Guide} 
-  %\VignetteEncoding{UTF-8}   
-  %\VignettePackage{DeeDee} 
+vignette: >
+  %\VignetteIndexEntry{The DeeDee User's Guide}
+  %\VignetteEncoding{UTF-8}  
+  %\VignettePackage{DeeDee}
+  %\VignetteKeywords{GeneExpression, RNASeq, Sequencing, Visualization, QualityControl, GUI}
   %\VignetteEngine{knitr::rmarkdown}
-editor_options:
+editor_options: 
   chunk_output_type: console
+bibliography: DeeDee_bibliography.bib
 ---
+
+<style type="text/css">
+.smaller {
+  font-size: 10px
+}
+</style>
+
+**Compiled date**: `r Sys.Date()`
+
+**Last edited**: 2023-01-12
+
+**License**: `r packageDescription("DeeDee")[["License"]]`
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(
-  echo = TRUE
+  collapse = TRUE,
+  comment  = "#>",
+  error    = FALSE,
+  warning  = FALSE,
+  eval     = TRUE,
+  message  = FALSE,
+  fig.width = 10
 )
+
+options(width = 100)
 ```
 
-```{r, echo = FALSE, warning = FALSE, message = FALSE, results = "hide"}
+<hr>
+
+# Introduction {#introduction}
+
+This vignette describes how to use the `r BiocStyle::Biocpkg("DeeDee")` package for ......
+
+This package provides ...... 
+
+In order to use `r BiocStyle::Biocpkg("DeeDee")` in your workflow, ...... the following inputs are required: 
+
+In the remainder of this vignette, we will illustrate the main features of `r BiocStyle::Biocpkg("DeeDee")` on a publicly available dataset from Alasoo, et al. "Shared genetic effects on chromatin and gene expression indicate a role for enhancer priming in immune response", published in Nature Genetics, January 2018 [@Alasoo2018]
+[doi:10.1038/s41588-018-0046-7](https://doi.org/10.1038/s41588-018-0046-7).
+
+The data is made available via the `r BiocStyle::Biocpkg("macrophage")` Bioconductor package, which contains the files output from the Salmon quantification (version 0.12.0, with Gencode v29 reference), as well as the values summarized at the gene level, which we will use to exemplify.
+
+In the `macrophage` experimental setting, the samples are available from 6 different donors, in 4 different conditions (naive, treated with Interferon gamma, with SL1344, or with a combination of Interferon gamma and SL1344).
+
+......
+
+We will focus our attention on the following comparisons:
+
+* between Interferon gamma treated samples vs naive samples.
+......
+
+# Getting started {#gettingstarted}
+
+To install this package, start R and enter:
+
+```{r install, eval=FALSE}
+if (!requireNamespace("BiocManager", quietly = TRUE))
+  install.packages("BiocManager")
+
+BiocManager::install("DeeDee")
+```
+
+Once installed, the package can be loaded and attached to your current workspace as follows:
+
+```{r loadlib, eval = TRUE}
 library("DeeDee")
+```
+
+If you have all four input elements ready, 
+
+......
+
+you can launch the `GeneTonic()` app by running:
+
+......
+
+
+# The `DeeDeeExperiment` class
+
+yadda yadda
+
+......
+
+# A typical analysis workflow with `DeeDee` {#typicalworkflow}
+
+
+a number of functions which can be used also as standalone components for a workflow.
+
+
+
+# Using `DeeDee` interactively: the `deedee_app()`
+
+
+Description of the `DeeDee` user interface {#userinterface}
+
+What it does
+
+How to use it
+
+
+
+
+# Additional Information {#additionalinfo}
+
+Bug reports can be posted on the Bioconductor support site (https://support.bioconductor.org/) or raised as issues in the `DeeDee` GitHub repository
+......
+(https://github.com/federicomarini/GeneTonic/issues). 
+
+The GitHub repository also contains the development version of the package, where new functionality is added over time - careful, you might be running bleeding edge versions!
+
+The authors appreciate well-considered suggestions for improvements or new features, or even better, pull requests.
+
+If you use `DeeDee` for your analysis, please cite it as shown below:
+
+```{r cite}
+citation("DeeDee")
+```
+
+
+# FAQs {#faqs}
+
+**Q: Why DeeDee?**
+
+A: For this and that
+
+**Q: I'd like to try `DeeDee` but I could not install it/I just want a quick peek into it. What can I do for this?**
+
+A: We set up an instance of `DeeDee` running on the `macrophage` dataset at this address: http://shiny.imbei.uni-mainz.de:3838/DeeDee.
+
+# Session Info {- .smaller}
+
+```{r sessioninfo}
+sessionInfo()
+```
+
+# References {-}
+
+```{r}
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+```{r, echo = FALSE, warning = FALSE, message = FALSE, results = "hide"}
+library(DeeDeeLegacy)
 data(DE_results_IFNg_naive, package = "DeeDee")
 IFNg_naive <- deedee_prepare(IFNg_naive, "DESeq2")
 data(DE_results_IFNg_both, package = "DeeDee")
@@ -134,7 +286,7 @@ The function `deedee_venn()` creates a Venn diagram depicting the overlaps of di
 \pagebreak
 ## DeeDee UpSet Plot
 
-The function `deedee_upset()` creates an UpSet plot depicting the overlaps of differentially expressed genes in the input datasets. Contrary to [`deedee_venn()`](#deedee-venn-diagram), the UpSet plot can compare multiple (and even more than four) datasets in a visually pleasing way. The parameter `mode` can be set to `up`, `down`, `both`, or `both_colored` (default), specifying if only up-regulated, down-regulated or both DE genes shall be depicted. If `both_colored` is chosen, the result is the same UpSet plot as for `both`, but the shares of the intersections where all samples have positive/negative logFC values are colored accoring to the color key. The minimum size for an intersection to be included in the plot can be defined via the parameter `min_setsize`, default is 10.
+The function `deedee_upset()` creates an UpSet plot depicting the overlaps of differentially expressed genes in the input datasets. Contrary to [`deedee_venn()`](#deedee-venn-diagram), the UpSet plot can compare multiple (and even more than four) datasets in a visually pleasing way. The parameter `mode` can be set to `up`, `down`, `both`, or `both_colored` (default), specifying if only up-regulated, down-regulated or both DE genes shall be depicted. If `both_colored` is chosen, the result is the same UpSet plot as for `both`, but the shares of the intersections where all samples have positive/negative logFC values are colored according to the color key. The minimum size for an intersection to be included in the plot can be defined via the parameter `min_setsize`, default is 10.
 
 ```{r, echo = TRUE, warning = FALSE, message = FALSE}
 deedee_upset(data = DeeDee_obj, mode = "both_colored", min_setsize = 15, pthresh = 0.05)
@@ -211,14 +363,4 @@ More information on the usage can be found in the `INFO` panel in each respectiv
 
 Optionally, you can include a list of DeeDee tables as an argument to the `deedee_app(data = DeeDee_obj)` function. The input can be combined with uploads and used just like these. 
 
-# Session Info {-}
-
-
-```{r, collapse=TRUE}
-sessionInfo()
-```
-
-
-
- 
  

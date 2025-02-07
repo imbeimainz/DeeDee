@@ -1,0 +1,38 @@
+authors:
+  Lea Rothörl:
+    href: https://github.com/lea-rothoerl
+  Federico Marini:
+    href: https://federicomarini.github.io
+
+template:
+  params:
+    bootswatch: cosmo
+
+navbar:
+  structure:
+    left:
+    - home
+    - intro
+    - reference
+    - articles
+    - news
+    right: github
+  components:
+    home:
+      icon: fa-home fa-lg
+      href: index.html
+    reference:
+      text: Reference
+      href: reference/index.html
+    articles:
+      text: Articles
+      menu:
+      - text: |
+          The `DeeDee` User's Guide
+        href: articles/deedee_manual.html
+    news:
+      text: Changelog
+      href: news/index.html
+    github:
+      icon: fab fa-github fa-lg
+      href: https://github.com/lea-rothoerl/DeeDee

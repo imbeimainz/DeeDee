@@ -1,14 +1,14 @@
 Package: DeeDee
 Title: Comparative Evaluation and Visualization of Differential Expression 
     Analyses
-Version: 0.1.0
+Version: 0.2.0
 Authors@R: 
     c(
-        person(given = "Lea", family = "Rothörl", role = c("aut", "cre"),
+        person(given = "Lea", family = "Rothörl", role = c("aut"),
            email = "lea.rothoerl@posteo.de", comment = c(ORCID = "0000-0003-2554-0583")
         ),
         person(
-            given = "Federico", family = "Marini", role = c("aut"), 
+            given = "Federico", family = "Marini", role = c("aut", "cre"), 
             email = "marinif@uni-mainz.de", comment = c(ORCID = "0000-0003-3252-7758")
         )
     )
@@ -21,22 +21,26 @@ Description: DeeDee is a collection of functions to compare the results of two
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.1.2
+RoxygenNote: 7.2.3
 Depends:
-    R (>= 4.1.0)
+    R (>= 4.3.0)
 Imports: 
     AnnotationDbi, 
     checkmate,
+    circlize,
     clusterProfiler,
     ComplexHeatmap,
     ComplexUpset,
     DESeq2,
     dplyr,
+    edgeR,
     enrichplot, 
     ggplot2,
     ggvenn,
     InteractiveComplexHeatmap,
+    limma,
     readxl, 
+    rmarkdown,
     rvest,
     shiny, 
     shinydashboard,
@@ -49,18 +53,20 @@ Imports:
     utils, 
     viridis,
     writexl,
-    xml2
+    xml2,
+    SummarizedExperiment,
+    methods,
+    S4Vectors,
+    rlang
 Suggests: 
     macrophage,
-    methods,
-    rmarkdown,
     knitr,
+    BiocStyle,
     org.Hs.eg.db,
     org.Mm.eg.db,
     org.Rn.eg.db,
     org.Dm.eg.db,
     testthat (>= 3.0.0)
-Config/testthat/edition: 3
 VignetteBuilder: knitr
 biocViews: GUI, GeneExpression, Software, Transcription, Transcriptomics, 
     Visualization, DifferentialExpression
