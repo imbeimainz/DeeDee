@@ -70,7 +70,7 @@ DeeDeeExperiment <- function(se = NULL,
   # }
 
   if (!is.null(de_results))
-    .check_de_results(de_results)
+    de_results <- .check_de_results(de_results)
 
   # se <- SummarizedExperiment(...)
   if(!is.null(se)) {
