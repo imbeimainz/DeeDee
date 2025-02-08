@@ -115,8 +115,6 @@ setMethod("add_dea",
             }
 
             # check that names are all unique, and do not overlap with the existing ones
-            names(dea)
-            names(dea(x))
             if (anyDuplicated(c(names(dea), names(dea(x))))) {
               stop("Names in dea must be unique!")
             }
@@ -137,9 +135,10 @@ setMethod("add_dea",
                 rowData(x)[[paste0(i,"_pvalue")]] <- NA
                 rowData(x)[[paste0(i,"_padj")]] <- NA
 
-                rowData(x)[[paste0(i,"_log2FoldChange")]][matched_ids] <- this_de$log2FoldChange
-                rowData(x)[[paste0(i,"_pvalue")]][matched_ids] <- this_de$pvalue
-                rowData(x)[[paste0(i,"_padj")]][matched_ids] <- this_de$padj
+                # make sure to avoid 'NAs are not allowed in subscripted assignments'
+                rowData(x)[[paste0(i,"_log2FoldChange")]][!is.na(matched_ids)] <- this_de$log2FoldChange
+                rowData(x)[[paste0(i,"_pvalue")]][!is.na(matched_ids)] <- this_de$pvalue
+                rowData(x)[[paste0(i,"_padj")]][!is.na(matched_ids)] <- this_de$padj
 
                 dea_contrasts[[i]] <- list(
                   alpha = metadata(this_de)$alpha,
@@ -149,10 +148,69 @@ setMethod("add_dea",
                   original_object = this_de,
                   package = "DESeq2"
                 )
+              } else if (is(this_de, "DGEExact") || is(this_de, "DGELRT")) {
+                res_tbl <- topTags(
+                  this_de,
+                  n = nrow(this_de),
+                  sort.by = "none"
+                )
+                matched_ids <- match(rownames(res_tbl), rownames(x))
+
+                # if not tested, add NA - everywhere? -> pre-fill?
+                rowData(x)[[paste0(i,"_log2FoldChange")]] <- NA
+                rowData(x)[[paste0(i,"_pvalue")]]         <- NA
+                rowData(x)[[paste0(i,"_padj")]]           <- NA
+
+                # populate using edgeR columns
+                rowData(x)[[paste0(i,"_log2FoldChange")]][!is.na(matched_ids)] <- res_tbl$table$logFC
+                rowData(x)[[paste0(i,"_pvalue")]][!is.na(matched_ids)]         <- res_tbl$table$PValue
+                rowData(x)[[paste0(i,"_padj")]][!is.na(matched_ids)]           <- res_tbl$table$FDR
+
+                # store metadata
+                dea_contrasts[[i]] <- list(
+                  alpha = NA,
+                  lfcThreshold = NA,
+                  metainfo_logFC = res_tbl$comparison,
+                  metainfo_pvalue = NA,
+                  original_object = this_de,
+                  package = "edgeR"
+                )
+              } else if (is(this_de, "MArrayLM")) {
+                res_tbl <- topTable(
+                  this_de,
+                  coef    = 2,
+                  number  = nrow(this_de),
+                  sort.by = "none"
+                )
+                matched_ids <- match(rownames(res_tbl), rownames(x))
+
+                # if not tested, add NA - everywhere? -> pre-fill?
+                rowData(x)[[paste0(i,"_log2FoldChange")]] <- NA
+                rowData(x)[[paste0(i,"_pvalue")]]         <- NA
+                rowData(x)[[paste0(i,"_padj")]]           <- NA
+
+                # populate using limma columns
+                rowData(x)[[paste0(i,"_log2FoldChange")]][!is.na(matched_ids)] <- res_tbl$logFC
+                rowData(x)[[paste0(i,"_pvalue")]][!is.na(matched_ids)]         <- res_tbl$P.Value
+                rowData(x)[[paste0(i,"_padj")]][!is.na(matched_ids)]           <- res_tbl$adj.P.Val
+
+                # store metadata
+                dea_contrasts[[i]] <- list(
+                  alpha = NA,
+                  lfcThreshold = NA,
+                  metainfo_logFC = res_tbl$comparison,
+                  metainfo_pvalue = NA,
+                  original_object = this_de,
+                  package = "limma"
+                )
+              }
+              else {
+                stop(paste0("The dea result '", i,
+                            "' is not recognized (supported classes: DESeqResults, MArrayLM, DGEExact and DGELRT)"))
               }
             }
 
-            # update the deslot
+            # update the dea slot
             dea(x) <- dea_contrasts
 
             # check here the validity
