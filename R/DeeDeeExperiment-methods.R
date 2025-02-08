@@ -128,7 +128,7 @@ setMethod("add_dea",
 
               # do different things according to what these objects are
               if(is(this_de, "DESeqResults")) {
-                matched_ids <- match(rownames(x), dde_ids)
+                matched_ids <- match(rownames(this_de),rownames(x))
 
                 # if not tested, add NA - everywhere? -> pre-fill?
                 rowData(x)[[paste0(i,"_log2FoldChange")]] <- NA
