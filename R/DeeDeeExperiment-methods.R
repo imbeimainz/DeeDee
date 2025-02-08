@@ -84,7 +84,7 @@ setMethod("dea",
 #' @rdname DeeDeeExperiment-methods
 #' @export
 setReplaceMethod("dea",
-                 c("DeeDeeExperiment", "list"),
+                 signature = c("DeeDeeExperiment", "ANY"),
                  definition = function(x, value) {
                    x@dea <- value
                    validObject(x)
@@ -97,7 +97,7 @@ setReplaceMethod("dea",
 #' @rdname DeeDeeExperiment-methods
 #' @export
 setMethod("add_dea",
-          signature = c("DeeDeeExperiment", "list"),
+          signature = c("DeeDeeExperiment", "ANY"),
           definition = function(x, dea) {
 
             # check and preocess dea
@@ -163,8 +163,11 @@ setMethod("add_dea",
           }
 )
 
-# TODO: might need one where I also simply add ONE single DE object, and that gets autoconverted to a named list (of length 1)
 
+# TODO: might need one where I also simply add ONE single DE object, and that gets autoconverted to a named list (of length 1)
+## this one was half addressed, dede accepts 1 single DE object now, the corresponding name is still to be generated
+## also add_dea() need a way to handle adding again 1 entry
+# TODO: address warning when extracting columns, doesnt seem to work well
 
 
 #' @rdname DeeDeeExperiment-methods
