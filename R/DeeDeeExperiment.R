@@ -400,16 +400,30 @@ DeeDeeExperiment <- function(se = NULL,
   # its component are either of the expected/accepted elements
   # checks their columns?
 
-  stopifnot(is.list(x))
-  stopifnot(length(x) > 0)
+  #stopifnot(is.list(x))
+  #stopifnot(length(x) > 0)
 
-  ok_types <- unlist(lapply(x, function(arg) {
-    is(arg, "DESeqResults") | is(arg, "DGEExact") | is(arg, "DGELRT") | is(arg, "MArrayLM")
-  }))
+  #### update : checks and processes the input
+  # if one single element
+  if (is(x, "DGEExact") ||
+      is(x, "DGELRT") || is(x, "MArrayLM") ||
+      is(x, "DESeqResults")) {
+    x <- list(x)
+    names(x) <- "dea_result_1" # maybe there is a way to generate the variable name?
+  } else {
+    # if a list
+    ok_types <- unlist(lapply(x, function(arg) {
+      is(arg, "DESeqResults") || is(arg, "DGEExact") ||
+        is(arg, "DGELRT") || is(arg, "MArrayLM")
+    }))
 
-  stopifnot(all(ok_types))
+    #print(ok_types)
 
-  return(TRUE)
+    if (!all(ok_types)) {
+      stop("All elements in the list must be of type DESeqResults, DGEExact, DGELRT, or MArrayLM.")
+    }
+  }
+  return(x)
 }
 
 
