@@ -347,6 +347,15 @@ DeeDeeExperiment <- function(se = NULL,
   # checks object
   stopifnot(is(res_de, "MArrayLM"))
 
+  # make sure there are at least 2 coefficients
+  if (ncol(res_de$coefficients) < 2) { # we still need to manage the handling of 1 contrast
+    warning(
+      "The provided MArrayLM object has only ",
+      ncol(res_de$coefficients),
+      " coefficient(s). At least 2 are required."
+    )
+  }
+
   # extract columns
   res_tbl <- topTable(res_de,
                       coef = 2,
