@@ -56,6 +56,7 @@
 #'
 #' @name DeeDee-pkg
 #' @docType package
+"_PACKAGE"
 NULL
 
 globalVariables(
