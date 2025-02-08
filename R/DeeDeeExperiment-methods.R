@@ -99,12 +99,27 @@ setReplaceMethod("dea",
 setMethod("add_dea",
           signature = c("DeeDeeExperiment", "list"),
           definition = function(x, dea) {
+
+            # check and preocess dea
+            dea <- .check_de_results(dea)
+            names(dea)
+            names(dea(x))
+
             # dde must be a DeeDeeExp
+            if (!is(x, "DeeDeeExperiment")) {
+              stop("x must be DeeDeeExperiment object!")
+            }
             # dea must be named list
+            if (is.null(names(dea))) {
+              stop("dea must be a named list!")
+            }
 
             # check that names are all unique, and do not overlap with the existing ones
             names(dea)
             names(dea(x))
+            if (anyDuplicated(c(names(dea), names(dea(x))))) {
+              stop("Names in dea must be unique!")
+            }
 
             dea_contrasts <- dea(x)
             dde_ids <- rownames(x)
@@ -163,7 +178,11 @@ setMethod("remove_dea",
             deas <- names(dea(x))
 
             deas_to_remove <- intersect(dea_name, deas)
+
             # warning() if nothing to remove
+            if(length(deas_to_remove) == 0){
+              warning("No matching dea entries found to remove.")
+            }
 
             for (i in deas_to_remove) {
               cols_to_remove <- c(paste0(i, c("_log2FoldChange", "_pvalue", "_padj")))
@@ -199,8 +218,16 @@ setMethod("get_dea_df",
             rd_info <- paste0(dea_name,
                               c("_log2FoldChange", "_pvalue", "_padj"))
 
-            if (! all(rd_info %in% colnames(rowData(x)))) {
-              stop("Columns not found")
+            # if (! all(rd_info %in% colnames(rowData(x)))) {
+            #   stop("Columns not found")
+            # }
+
+            # check for missing columns, for a more precise feedback on the error
+            missing_cols <- rd_info[!rd_info %in% colnames(rowData(x))]
+
+            if (length(missing_cols) > 0) {
+              stop("The following columns are missing: ",
+                   paste(missing_cols, collapse = ", "))
             }
 
             out <- rowData(x)[, rd_info]
