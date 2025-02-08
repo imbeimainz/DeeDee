@@ -245,9 +245,9 @@ DeeDeeExperiment <- function(se = NULL,
   rowData(se)[[paste0(de_name,"_pvalue")]] <- NA
   rowData(se)[[paste0(de_name,"_padj")]] <- NA
 
-  rowData(se)[[paste0(de_name,"_log2FoldChange")]][matched_ids] <- res_de$log2FoldChange
-  rowData(se)[[paste0(de_name,"_pvalue")]][matched_ids] <- res_de$pvalue
-  rowData(se)[[paste0(de_name,"_padj")]][matched_ids] <- res_de$padj
+  rowData(se)[[paste0(de_name,"_log2FoldChange")]][!is.na(matched_ids)] <- res_de$log2FoldChange
+  rowData(se)[[paste0(de_name,"_pvalue")]][!is.na(matched_ids)] <- res_de$pvalue
+  rowData(se)[[paste0(de_name,"_padj")]][!is.na(matched_ids)] <- res_de$padj
 
   dea_contrast <- list(
     alpha = metadata(res_de)$alpha,
@@ -301,9 +301,9 @@ DeeDeeExperiment <- function(se = NULL,
   rowData(se)[[paste0(de_name,"_pvalue")]] <- NA
   rowData(se)[[paste0(de_name,"_padj")]] <- NA
 
-  rowData(se)[[paste0(de_name,"_log2FoldChange")]][matched_ids] <- res_tbl$table$logFC
-  rowData(se)[[paste0(de_name,"_pvalue")]][matched_ids] <- res_tbl$table$PValue
-  rowData(se)[[paste0(de_name,"_padj")]][matched_ids] <- res_tbl$table$FDR
+  rowData(se)[[paste0(de_name,"_log2FoldChange")]][!is.na(matched_ids)] <- res_tbl$table$logFC
+  rowData(se)[[paste0(de_name,"_pvalue")]][!is.na(matched_ids)] <- res_tbl$table$PValue
+  rowData(se)[[paste0(de_name,"_padj")]][!is.na(matched_ids)] <- res_tbl$table$FDR
 
   dea_contrast <- list(
     alpha = NA,
@@ -370,9 +370,9 @@ DeeDeeExperiment <- function(se = NULL,
   rowData(se)[[paste0(de_name,"_pvalue")]] <- NA
   rowData(se)[[paste0(de_name,"_padj")]] <- NA
 
-  rowData(se)[[paste0(de_name,"_log2FoldChange")]][matched_ids] <- res_tbl$logFC
-  rowData(se)[[paste0(de_name,"_pvalue")]][matched_ids] <- res_tbl$P.Value
-  rowData(se)[[paste0(de_name,"_padj")]][matched_ids] <- res_tbl$adj.P.Val
+  rowData(se)[[paste0(de_name,"_log2FoldChange")]][!is.na(matched_ids)] <- res_tbl$logFC
+  rowData(se)[[paste0(de_name,"_pvalue")]][!is.na(matched_ids)] <- res_tbl$P.Value
+  rowData(se)[[paste0(de_name,"_padj")]][!is.na(matched_ids)] <- res_tbl$adj.P.Val
 
   dea_contrast <- list(
     alpha = NA,
