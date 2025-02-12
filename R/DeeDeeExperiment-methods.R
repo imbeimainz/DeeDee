@@ -128,17 +128,25 @@ setMethod("add_dea",
 
               # do different things according to what these objects are
               if(is(this_de, "DESeqResults")) {
-                matched_ids <- match(rownames(this_de),rownames(x))
 
-                # if not tested, add NA - everywhere? -> pre-fill?
-                rowData(x)[[paste0(i,"_log2FoldChange")]] <- NA
-                rowData(x)[[paste0(i,"_pvalue")]] <- NA
-                rowData(x)[[paste0(i,"_padj")]] <- NA
 
-                # make sure to avoid 'NAs are not allowed in subscripted assignments'
-                rowData(x)[[paste0(i,"_log2FoldChange")]][!is.na(matched_ids)] <- this_de$log2FoldChange
-                rowData(x)[[paste0(i,"_pvalue")]][!is.na(matched_ids)] <- this_de$pvalue
-                rowData(x)[[paste0(i,"_padj")]][!is.na(matched_ids)] <- this_de$padj
+                matched_ids <- match(rownames(x), rownames(this_de)) # we align de res with se
+                # only valid indices
+                valid_matches <- !is.na(matched_ids)
+
+
+                # Pre-fill rowData with NA
+                rowData(x)[[paste0(i, "_log2FoldChange")]] <- NA
+                rowData(x)[[paste0(i, "_pvalue")]]         <- NA
+                rowData(x)[[paste0(i, "_padj")]]           <- NA
+
+
+                # assign values only for matched indices, to have on both sides the
+                # same length. we keep NA for unmatched genes
+                rowData(x)[[paste0(i, "_log2FoldChange")]][valid_matches] <- this_de$log2FoldChange[matched_ids[valid_matches]]
+                rowData(x)[[paste0(i, "_pvalue")]][valid_matches]         <- this_de$pvalue[matched_ids[valid_matches]]
+                rowData(x)[[paste0(i, "_padj")]][valid_matches]           <- this_de$padj[matched_ids[valid_matches]]
+
 
                 dea_contrasts[[i]] <- list(
                   alpha = metadata(this_de)$alpha,
@@ -154,17 +162,36 @@ setMethod("add_dea",
                   n = nrow(this_de),
                   sort.by = "none"
                 )
-                matched_ids <- match(rownames(res_tbl), rownames(x))
+
+                matched_ids <- match(rownames(x), rownames(res_tbl)) # we align de res with se
+                # only valid indices
+                valid_matches <- !is.na(matched_ids)
+
+
+                # Pre-fill rowData with NA
+                rowData(x)[[paste0(i, "_log2FoldChange")]] <- NA
+                rowData(x)[[paste0(i, "_pvalue")]]         <- NA
+                rowData(x)[[paste0(i, "_padj")]]           <- NA
+
+
+                # assign values only for matched indices, to have on both sides the
+                # same length. we keep NA for unmatched genes
+                rowData(x)[[paste0(i, "_log2FoldChange")]][valid_matches] <- res_tbl$table$logFC[matched_ids[valid_matches]]
+                rowData(x)[[paste0(i, "_pvalue")]][valid_matches]         <- res_tbl$table$PValue[matched_ids[valid_matches]]
+                rowData(x)[[paste0(i, "_padj")]][valid_matches]           <- res_tbl$table$FDR[matched_ids[valid_matches]]
+
+
 
                 # if not tested, add NA - everywhere? -> pre-fill?
-                rowData(x)[[paste0(i,"_log2FoldChange")]] <- NA
-                rowData(x)[[paste0(i,"_pvalue")]]         <- NA
-                rowData(x)[[paste0(i,"_padj")]]           <- NA
-
-                # populate using edgeR columns
-                rowData(x)[[paste0(i,"_log2FoldChange")]][!is.na(matched_ids)] <- res_tbl$table$logFC
-                rowData(x)[[paste0(i,"_pvalue")]][!is.na(matched_ids)]         <- res_tbl$table$PValue
-                rowData(x)[[paste0(i,"_padj")]][!is.na(matched_ids)]           <- res_tbl$table$FDR
+                # avoid NA as a logical vector??
+                # rowData(x)[[paste0(i,"_log2FoldChange")]] <- NA
+                # rowData(x)[[paste0(i,"_pvalue")]]         <- NA
+                # rowData(x)[[paste0(i,"_padj")]]           <- NA
+                #
+                # # populate using edgeR columns
+                # rowData(x)[[paste0(i,"_log2FoldChange")]][!is.na(matched_ids)] <- res_tbl$table$logFC
+                # rowData(x)[[paste0(i,"_pvalue")]][!is.na(matched_ids)]         <- res_tbl$table$PValue
+                # rowData(x)[[paste0(i,"_padj")]][!is.na(matched_ids)]           <- res_tbl$table$FDR
 
                 # store metadata
                 dea_contrasts[[i]] <- list(
@@ -182,17 +209,36 @@ setMethod("add_dea",
                   number  = nrow(this_de),
                   sort.by = "none"
                 )
-                matched_ids <- match(rownames(res_tbl), rownames(x))
 
-                # if not tested, add NA - everywhere? -> pre-fill?
-                rowData(x)[[paste0(i,"_log2FoldChange")]] <- NA
-                rowData(x)[[paste0(i,"_pvalue")]]         <- NA
-                rowData(x)[[paste0(i,"_padj")]]           <- NA
+                matched_ids <- match(rownames(x), rownames(res_tbl)) # we align de res with se
+                # only valid indices
+                valid_matches <- !is.na(matched_ids)
 
-                # populate using limma columns
-                rowData(x)[[paste0(i,"_log2FoldChange")]][!is.na(matched_ids)] <- res_tbl$logFC
-                rowData(x)[[paste0(i,"_pvalue")]][!is.na(matched_ids)]         <- res_tbl$P.Value
-                rowData(x)[[paste0(i,"_padj")]][!is.na(matched_ids)]           <- res_tbl$adj.P.Val
+
+                # Pre-fill rowData with NA
+                rowData(x)[[paste0(i, "_log2FoldChange")]] <- NA
+                rowData(x)[[paste0(i, "_pvalue")]]         <- NA
+                rowData(x)[[paste0(i, "_padj")]]           <- NA
+
+
+                # assign values only for matched indices, to have on both sides the
+                # same length. we keep NA for unmatched genes
+                rowData(x)[[paste0(i, "_log2FoldChange")]][valid_matches] <- res_tbl$logFC[matched_ids[valid_matches]]
+                rowData(x)[[paste0(i, "_pvalue")]][valid_matches]         <- res_tbl$P.Value[matched_ids[valid_matches]]
+                rowData(x)[[paste0(i, "_padj")]][valid_matches]           <- res_tbl$adj.P.Val[matched_ids[valid_matches]]
+
+
+                # matched_ids <- match(rownames(x), rownames(res_tbl))
+                #
+                # # if not tested, add NA - everywhere? -> pre-fill?
+                # rowData(x)[[paste0(i,"_log2FoldChange")]] <- NA
+                # rowData(x)[[paste0(i,"_pvalue")]]         <- NA
+                # rowData(x)[[paste0(i,"_padj")]]           <- NA
+                #
+                # # populate using limma columns
+                # rowData(x)[[paste0(i,"_log2FoldChange")]][!is.na(matched_ids)] <- res_tbl$logFC
+                # rowData(x)[[paste0(i,"_pvalue")]][!is.na(matched_ids)]         <- res_tbl$P.Value
+                # rowData(x)[[paste0(i,"_padj")]][!is.na(matched_ids)]           <- res_tbl$adj.P.Val
 
                 # store metadata
                 dea_contrasts[[i]] <- list(

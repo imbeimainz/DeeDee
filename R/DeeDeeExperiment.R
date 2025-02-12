@@ -237,17 +237,36 @@ DeeDeeExperiment <- function(se = NULL,
     all(na.omit(res_de$pvalue <= 1)) & all(na.omit(res_de$pvalue > 0))
   )
 
+  #matched_ids <- match(rownames(res_de), rownames(se))
 
-  matched_ids <- match(rownames(res_de), rownames(se))
+  matched_ids <- match(rownames(se), rownames(res_de)) # we align de res with se
+  # only valid indices
+  valid_matches <- !is.na(matched_ids)
+
+
+  # Pre-fill rowData with NA
+  rowData(se)[[paste0(de_name, "_log2FoldChange")]] <- NA
+  rowData(se)[[paste0(de_name, "_pvalue")]]         <- NA
+  rowData(se)[[paste0(de_name, "_padj")]]           <- NA
+
+
+  # assign values only for matched indices, to have on both sides the
+  # same length. we keep NA for unmatched genes
+  rowData(se)[[paste0(de_name, "_log2FoldChange")]][valid_matches] <- res_de$log2FoldChange[matched_ids[valid_matches]]
+  rowData(se)[[paste0(de_name, "_pvalue")]][valid_matches]         <- res_de$pvalue[matched_ids[valid_matches]]
+  rowData(se)[[paste0(de_name, "_padj")]][valid_matches]           <- res_de$padj[matched_ids[valid_matches]]
+
+
+
 
   # if not tested, add NA - everywhere? -> pre-fill?
-  rowData(se)[[paste0(de_name,"_log2FoldChange")]] <- NA
-  rowData(se)[[paste0(de_name,"_pvalue")]] <- NA
-  rowData(se)[[paste0(de_name,"_padj")]] <- NA
-
-  rowData(se)[[paste0(de_name,"_log2FoldChange")]][!is.na(matched_ids)] <- res_de$log2FoldChange
-  rowData(se)[[paste0(de_name,"_pvalue")]][!is.na(matched_ids)] <- res_de$pvalue
-  rowData(se)[[paste0(de_name,"_padj")]][!is.na(matched_ids)] <- res_de$padj
+  # rowData(se)[[paste0(de_name,"_log2FoldChange")]] <- NA
+  # rowData(se)[[paste0(de_name,"_pvalue")]] <- NA
+  # rowData(se)[[paste0(de_name,"_padj")]] <- NA
+  #
+  # rowData(se)[[paste0(de_name,"_log2FoldChange")]][!is.na(matched_ids)] <- res_de$log2FoldChange
+  # rowData(se)[[paste0(de_name,"_pvalue")]][!is.na(matched_ids)] <- res_de$pvalue
+  # rowData(se)[[paste0(de_name,"_padj")]][!is.na(matched_ids)] <- res_de$padj
 
   dea_contrast <- list(
     alpha = metadata(res_de)$alpha,
@@ -294,16 +313,34 @@ DeeDeeExperiment <- function(se = NULL,
   res_tbl <- topTags(res_de, n = nrow(res_de), sort.by = "none")
 
 
-  matched_ids <- match(rownames(res_tbl), rownames(se))
+  matched_ids <- match(rownames(se), rownames(res_tbl)) # we align de res with se
+  # only valid indices
+  valid_matches <- !is.na(matched_ids)
+
+
+  # Pre-fill rowData with NA
+  rowData(se)[[paste0(de_name, "_log2FoldChange")]] <- NA
+  rowData(se)[[paste0(de_name, "_pvalue")]]         <- NA
+  rowData(se)[[paste0(de_name, "_padj")]]           <- NA
+
+
+  # assign values only for matched indices, to have on both sides the
+  # same length. we keep NA for unmatched genes
+  rowData(se)[[paste0(de_name, "_log2FoldChange")]][valid_matches] <- res_tbl$table$logFC[matched_ids[valid_matches]]
+  rowData(se)[[paste0(de_name, "_pvalue")]][valid_matches]         <- res_tbl$table$PValue[matched_ids[valid_matches]]
+  rowData(se)[[paste0(de_name, "_padj")]][valid_matches]           <- res_tbl$table$FDR[matched_ids[valid_matches]]
+
+
+
 
   # if not tested, add NA - everywhere? -> pre-fill?
-  rowData(se)[[paste0(de_name,"_log2FoldChange")]] <- NA
-  rowData(se)[[paste0(de_name,"_pvalue")]] <- NA
-  rowData(se)[[paste0(de_name,"_padj")]] <- NA
-
-  rowData(se)[[paste0(de_name,"_log2FoldChange")]][!is.na(matched_ids)] <- res_tbl$table$logFC
-  rowData(se)[[paste0(de_name,"_pvalue")]][!is.na(matched_ids)] <- res_tbl$table$PValue
-  rowData(se)[[paste0(de_name,"_padj")]][!is.na(matched_ids)] <- res_tbl$table$FDR
+  # rowData(se)[[paste0(de_name,"_log2FoldChange")]] <- NA
+  # rowData(se)[[paste0(de_name,"_pvalue")]] <- NA
+  # rowData(se)[[paste0(de_name,"_padj")]] <- NA
+  #
+  # rowData(se)[[paste0(de_name,"_log2FoldChange")]][!is.na(matched_ids)] <- res_tbl$table$logFC
+  # rowData(se)[[paste0(de_name,"_pvalue")]][!is.na(matched_ids)] <- res_tbl$table$PValue
+  # rowData(se)[[paste0(de_name,"_padj")]][!is.na(matched_ids)] <- res_tbl$table$FDR
 
   dea_contrast <- list(
     alpha = NA,
@@ -363,16 +400,37 @@ DeeDeeExperiment <- function(se = NULL,
                       sort.by = "none")
 
 
-  matched_ids <- match(rownames(res_tbl), rownames(se))
+  #matched_ids <- match(rownames(res_tbl), rownames(se))
+
+  matched_ids <- match(rownames(se), rownames(res_tbl)) # we align de res with se
+  # only valid indices
+  valid_matches <- !is.na(matched_ids)
+
+
+  # Pre-fill rowData with NA
+  rowData(se)[[paste0(de_name, "_log2FoldChange")]] <- NA
+  rowData(se)[[paste0(de_name, "_pvalue")]]         <- NA
+  rowData(se)[[paste0(de_name, "_padj")]]           <- NA
+
+
+  # assign values only for matched indices, to have on both sides the
+  # same length. we keep NA for unmatched genes
+  rowData(se)[[paste0(de_name, "_log2FoldChange")]][valid_matches] <- res_tbl$logFC[matched_ids[valid_matches]]
+  rowData(se)[[paste0(de_name, "_pvalue")]][valid_matches]         <- res_tbl$P.Value[matched_ids[valid_matches]]
+  rowData(se)[[paste0(de_name, "_padj")]][valid_matches]           <- res_tbl$adj.P.Val[matched_ids[valid_matches]]
+
+
+
+
 
   # if not tested, add NA - everywhere? -> pre-fill?
-  rowData(se)[[paste0(de_name,"_log2FoldChange")]] <- NA
-  rowData(se)[[paste0(de_name,"_pvalue")]] <- NA
-  rowData(se)[[paste0(de_name,"_padj")]] <- NA
-
-  rowData(se)[[paste0(de_name,"_log2FoldChange")]][!is.na(matched_ids)] <- res_tbl$logFC
-  rowData(se)[[paste0(de_name,"_pvalue")]][!is.na(matched_ids)] <- res_tbl$P.Value
-  rowData(se)[[paste0(de_name,"_padj")]][!is.na(matched_ids)] <- res_tbl$adj.P.Val
+  # rowData(se)[[paste0(de_name,"_log2FoldChange")]] <- NA
+  # rowData(se)[[paste0(de_name,"_pvalue")]] <- NA
+  # rowData(se)[[paste0(de_name,"_padj")]] <- NA
+  #
+  # rowData(se)[[paste0(de_name,"_log2FoldChange")]][!is.na(matched_ids)] <- res_tbl$logFC
+  # rowData(se)[[paste0(de_name,"_pvalue")]][!is.na(matched_ids)] <- res_tbl$P.Value
+  # rowData(se)[[paste0(de_name,"_padj")]][!is.na(matched_ids)] <- res_tbl$adj.P.Val
 
   dea_contrast <- list(
     alpha = NA,
