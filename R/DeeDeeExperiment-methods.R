@@ -114,7 +114,7 @@ setMethod("add_dea",
             }
             # dea must be named list
             if (is.null(names(dea))) {
-              stop("dea must be a named list!")
+              stop("All elements in dea list must have names!")
             }
 
             # check that names are all unique, and do not overlap with the existing ones
@@ -254,8 +254,8 @@ setMethod("add_dea",
                 )
               }
               else {
-                stop(paste0("The dea result '", i,
-                            "' is not recognized (supported classes: DESeqResults, MArrayLM, DGEExact and DGELRT)"))
+                stop("The dea result '",i,
+                            "' is not recognized (supported classes: DESeqResults, MArrayLM, DGEExact and DGELRT)")
               }
             }
 
