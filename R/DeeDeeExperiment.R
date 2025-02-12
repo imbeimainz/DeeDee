@@ -69,8 +69,11 @@ DeeDeeExperiment <- function(se = NULL,
   #   on.exit(S4Vectors:::disableValidity(old))
   # }
 
-  if (!is.null(de_results))
-    de_results <- .check_de_results(de_results)
+  if (!is.null(de_results)) {
+    entry_name <- deparse(substitute(de_results))
+    de_results <- .check_de_results(de_results,entry_name)
+  }
+
 
   # se <- SummarizedExperiment(...)
   if(!is.null(se)) {
@@ -460,8 +463,10 @@ DeeDeeExperiment <- function(se = NULL,
 }
 
 
+# if de_results is one element, this function will capture the variable name and
+# convert it into a character string to be passed to .check_de_results
 
-.check_de_results <- function(x) {
+.check_de_results <- function(x, entry_name=NULL) {
   # checks that:
   # it is a list
   # its component are either of the expected/accepted elements
@@ -471,12 +476,17 @@ DeeDeeExperiment <- function(se = NULL,
   #stopifnot(length(x) > 0)
 
   #### update : checks and processes the input
-  # if one single element
+  # if one single element, i.e not a list, convert if into a list of length 1
   if (is(x, "DGEExact") ||
       is(x, "DGELRT") || is(x, "MArrayLM") ||
       is(x, "DESeqResults")) {
+
+    if(is.null(entry_name)) {
+      stop("You must provide a name for your de results!")
+    }
+
     x <- list(x)
-    names(x) <- "dea_result_1" # maybe there is a way to generate the variable name?
+    names(x) <- entry_name
   } else {
     # if a list
     ok_types <- unlist(lapply(x, function(arg) {
@@ -484,14 +494,14 @@ DeeDeeExperiment <- function(se = NULL,
         is(arg, "DGELRT") || is(arg, "MArrayLM")
     }))
 
-    #print(ok_types)
-
     if (!all(ok_types)) {
       stop("All elements in the list must be of type DESeqResults, DGEExact, DGELRT, or MArrayLM.")
     }
   }
   return(x)
 }
+
+
 
 
 deedee_import <- function(x) {
