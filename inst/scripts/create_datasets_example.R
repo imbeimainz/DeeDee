@@ -126,4 +126,3 @@ de_named_list <- list(
 data("de_named_list", package = "DeeDee")
 
 dde <- DeeDeeExperiment(se_macrophage_noassays, de_results = de_named_list)
-
