@@ -11,7 +11,7 @@ test_that("creating", {
   dde_only_de <- DeeDeeExperiment(
     de_results = de_named_list
   )
-  expect_is(dde, "DeeDeeExperiment")
+  expect_is(dde_only_de, "DeeDeeExperiment")
 
   dde_nodd <- DeeDeeExperiment(
     se = se_macrophage_noassays,
