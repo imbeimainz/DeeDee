@@ -50,7 +50,25 @@ test_that("creating", {
   expect_error(
     DeeDeeExperiment()
   )
-})
+
+  salmo_both <- de_named_list$salmo_both
+
+  dde_one <- DeeDeeExperiment(se = se_macrophage_noassays,
+                              de_results = salmo_both)
+
+  expect_false(is.list(salmo_both))
+
+  expect_is(salmo_both, "DESeqResults")
+
+  expect_is(dea(dde_one), "list")
+
+  expect_length(dea(dde_one), 1)
+
+  expect_true("salmo_both" == names(dea(dde_one)))
+
+}
+
+)
 
 
 test_that("adding and removing", {
