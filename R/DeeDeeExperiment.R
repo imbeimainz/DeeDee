@@ -15,6 +15,9 @@
 #' store the DE related information.
 #' @param de_results A named list of DE results, in any of the formats supported by
 #' the `DeeDee` package (currently: results from DESeq2, edgeR, limma).
+#' @param dds A `DESeqDataSet` object, that contains DE results after running `DESeq()`.
+#' @param ... Additional arguments related to the `DESeq2::results()` function
+#' that extracts DE results from the `dds` object.
 #'
 #' @details
 #' The `se` parameter can be optionally left unspecified. If this is the case,
@@ -61,20 +64,70 @@
 #'   de_results = de_named_list
 #' )
 DeeDeeExperiment <- function(se = NULL,
-                             de_results = NULL) {
+                             de_results = NULL,
+                             dds = NULL,
+                             ...) {
 
   # old <- S4Vectors:::disableValidity()
   # if (!isTRUE(old)) {
   #   S4Vectors:::disableValidity(TRUE)
   #   on.exit(S4Vectors:::disableValidity(old))
   # }
-
+  
+  extracted_de_results <- list()
+  
   if (!is.null(de_results)) {
     entry_name <- deparse(substitute(de_results))
-    de_results <- .check_de_results(de_results,entry_name)
+    de_results <- .check_de_results(de_results, entry_name)
+
+    extracted_de_results <- c(extracted_de_results, de_results)
+  }
+  
+  # if dds is provided, extract de results
+  if (!is.null(dds)) {
+    if (!is(dds, "DESeqDataSet")) {
+      stop("'dds' must be a DESeqDataSet object!")
+    }
+    
+    message("Extracting differential expression results from DESeqDataSet...")
+    
+    # get available contrasts
+    contrast_names <- resultsNames(dds)
+    # remove intercept to avoid conflicts, as it is not informative for comparisons
+    contrast_names <- contrast_names[contrast_names != "Intercept"]
+    
+    if (length(contrast_names) == 0) {
+      stop("No results found in the DESeqDataSet. You must run `DESeq()` first.")
+    } else {
+      for (contrast in contrast_names) {
+        # capturing whether we specify arguments for the results extraction
+        add_res_arg <- c(...)
+        if (length(add_res_arg) == 0) {
+          message("Extracting results for '", contrast, "' with default parameters")
+        } else {
+          message("Extracting results for '", contrast, "' with the following parameters:",
+                  paste(paste0(names(add_res_arg), " = ", add_res_arg),collapse = " ,"))
+          
+        }
+        extracted_de_results[[contrast]] <- results(dds, name = contrast, ...)
+      }
+      # merge all de results, also when dds and de_results are provided
+      #extracted_de_results <- c(extracted_de_results, de_results)
+    }
+    
+    # when both se and dds are provided ???
+    if (is.null(se)) {
+      message("Using provided dds to construct RangedSummarizedExperiment...")
+      se <- as(dds, "RangedSummarizedExperiment")
+    } else {
+      warning("You are providing both 'se' and 'dds'. The 'se' object will be overwritten with data from 'dds'")
+      se <- as(dds, "RangedSummarizedExperiment")
+    }
   }
 
-
+  # check validity of de results format
+  extracted_de_results <- .check_de_results(extracted_de_results)
+  
   # se <- SummarizedExperiment(...)
   if(!is.null(se)) {
     if (!is(se, "RangedSummarizedExperiment")) {
@@ -85,12 +138,12 @@ DeeDeeExperiment <- function(se = NULL,
       }
     }
   } else {
-    if(is.null(de_results))
-      stop("You have to provide at least an se object or a de_results object")
+    if(length(extracted_de_results) == 0)
+      stop("You have to provide at least an se object, a dds object or a de_results object")
 
     message("creating a mock SE from the rows of the DE result objects")
-    # mock up the se from the de_results
-    first_de <- de_results[[1]]
+    # mock up the se from the extracted_de_results
+    first_de <- extracted_de_results[[1]]
 
     # independently of the class, the feature names are in the
     # rownames slot, TODO: check
@@ -117,17 +170,19 @@ DeeDeeExperiment <- function(se = NULL,
   # TODO: the row names are taken from the FIRST object in the de results then - or
   # from the union of all of them?
 
-  if (is.null(de_results)) {
+  
+  if (is.null(de_results) && is.null(dds)) {
     object <- new("DeeDeeExperiment",
                   se,
                   dea = list()
     )
-
+    
     # stash the package version
     metadata(object)[["version"]] <- packageVersion("DeeDee")
-
+    
     return(object)
   }
+  
 
   # TODO: does not have to relate to an SE which has all the slots and all
   # ...
@@ -138,7 +193,7 @@ DeeDeeExperiment <- function(se = NULL,
 
   # here is where I add the names in the rowData to make all info matched
   # checks on the names
-  names(de_results)
+  names(extracted_de_results)
   # if not there, "force add"
   # TODO
 
@@ -146,40 +201,22 @@ DeeDeeExperiment <- function(se = NULL,
 
   dea_contrasts <- list()
 
-  for (i in names(de_results)){
-    this_de <- de_results[[i]]
+  for (i in names(extracted_de_results)){
+    this_de <- extracted_de_results[[i]]
 
     # do different things according to what these objects are
     if(is(this_de, "DESeqResults")) {
-
-
       input_deseq2 <- .importDE_DESeq2(se_out, this_de, i)
       se_out <- input_deseq2$se
       dea_contrasts[[i]] <- input_deseq2$dea_contrast
 
-      # matched_ids <- match(rownames(se_out), rownames(this_de))
-      #
-      # # if not tested, add NA - everywhere? -> pre-fill?
-      # rowData(se_out)[[paste0(i,"_log2FoldChange")]] <- NA
-      # rowData(se_out)[[paste0(i,"_pvalue")]] <- NA
-      # rowData(se_out)[[paste0(i,"_padj")]] <- NA
-      #
-      # rowData(se_out)[[paste0(i,"_log2FoldChange")]][matched_ids] <- this_de$log2FoldChange
-      # rowData(se_out)[[paste0(i,"_pvalue")]][matched_ids] <- this_de$pvalue
-      # rowData(se_out)[[paste0(i,"_padj")]][matched_ids] <- this_de$padj
-      #
-      # dea_contrasts[[i]] <- list(
-      #   alpha = metadata(this_de)$alpha,
-      #   lfcThreshold = metadata(this_de)$lfcThreshold,
-      #   metainfo_logFC = mcols(this_de)$description[colnames(this_de) == "log2FoldChange"],
-      #   metainfo_pvalue = mcols(this_de)$description[colnames(this_de) == "pvalue"],
-      #   original_object = this_de,
-      #   package = "DESeq2"
-      # ) is(res_de, "DGEExact") | is(res_de, "DGELRT")
+      
     } else if (is(this_de, "DGEExact") | is(this_de, "DGELRT")) {
       input_edgeR <- .importDE_edgeR(se_out, this_de, i)
       se_out <- input_edgeR$se
       dea_contrasts[[i]] <- input_edgeR$dea_contrast
+      
+      
     } else if (is(this_de, "MArrayLM")) {
       input_limma <- .importDE_limma(se_out, this_de, i)
       se_out <- input_limma$se
@@ -260,17 +297,6 @@ DeeDeeExperiment <- function(se = NULL,
   rowData(se)[[paste0(de_name, "_padj")]][valid_matches]           <- res_de$padj[matched_ids[valid_matches]]
 
 
-
-
-  # if not tested, add NA - everywhere? -> pre-fill?
-  # rowData(se)[[paste0(de_name,"_log2FoldChange")]] <- NA
-  # rowData(se)[[paste0(de_name,"_pvalue")]] <- NA
-  # rowData(se)[[paste0(de_name,"_padj")]] <- NA
-  #
-  # rowData(se)[[paste0(de_name,"_log2FoldChange")]][!is.na(matched_ids)] <- res_de$log2FoldChange
-  # rowData(se)[[paste0(de_name,"_pvalue")]][!is.na(matched_ids)] <- res_de$pvalue
-  # rowData(se)[[paste0(de_name,"_padj")]][!is.na(matched_ids)] <- res_de$padj
-
   dea_contrast <- list(
     alpha = metadata(res_de)$alpha,
     lfcThreshold = metadata(res_de)$lfcThreshold,
@@ -332,18 +358,6 @@ DeeDeeExperiment <- function(se = NULL,
   rowData(se)[[paste0(de_name, "_log2FoldChange")]][valid_matches] <- res_tbl$table$logFC[matched_ids[valid_matches]]
   rowData(se)[[paste0(de_name, "_pvalue")]][valid_matches]         <- res_tbl$table$PValue[matched_ids[valid_matches]]
   rowData(se)[[paste0(de_name, "_padj")]][valid_matches]           <- res_tbl$table$FDR[matched_ids[valid_matches]]
-
-
-
-
-  # if not tested, add NA - everywhere? -> pre-fill?
-  # rowData(se)[[paste0(de_name,"_log2FoldChange")]] <- NA
-  # rowData(se)[[paste0(de_name,"_pvalue")]] <- NA
-  # rowData(se)[[paste0(de_name,"_padj")]] <- NA
-  #
-  # rowData(se)[[paste0(de_name,"_log2FoldChange")]][!is.na(matched_ids)] <- res_tbl$table$logFC
-  # rowData(se)[[paste0(de_name,"_pvalue")]][!is.na(matched_ids)] <- res_tbl$table$PValue
-  # rowData(se)[[paste0(de_name,"_padj")]][!is.na(matched_ids)] <- res_tbl$table$FDR
 
   dea_contrast <- list(
     alpha = NA,
@@ -422,19 +436,6 @@ DeeDeeExperiment <- function(se = NULL,
   rowData(se)[[paste0(de_name, "_pvalue")]][valid_matches]         <- res_tbl$P.Value[matched_ids[valid_matches]]
   rowData(se)[[paste0(de_name, "_padj")]][valid_matches]           <- res_tbl$adj.P.Val[matched_ids[valid_matches]]
 
-
-
-
-
-  # if not tested, add NA - everywhere? -> pre-fill?
-  # rowData(se)[[paste0(de_name,"_log2FoldChange")]] <- NA
-  # rowData(se)[[paste0(de_name,"_pvalue")]] <- NA
-  # rowData(se)[[paste0(de_name,"_padj")]] <- NA
-  #
-  # rowData(se)[[paste0(de_name,"_log2FoldChange")]][!is.na(matched_ids)] <- res_tbl$logFC
-  # rowData(se)[[paste0(de_name,"_pvalue")]][!is.na(matched_ids)] <- res_tbl$P.Value
-  # rowData(se)[[paste0(de_name,"_padj")]][!is.na(matched_ids)] <- res_tbl$adj.P.Val
-
   dea_contrast <- list(
     alpha = NA,
     lfcThreshold = NA,
@@ -471,9 +472,6 @@ DeeDeeExperiment <- function(se = NULL,
   # it is a list
   # its component are either of the expected/accepted elements
   # checks their columns?
-
-  #stopifnot(is.list(x))
-  #stopifnot(length(x) > 0)
 
   #### update : checks and processes the input
   # if one single element, i.e not a list, convert if into a list of length 1
