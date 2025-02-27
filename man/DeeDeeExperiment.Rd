@@ -6,7 +6,7 @@
 \alias{DeeDeeExperiment}
 \title{The DeeDeeExperiment class}
 \usage{
-DeeDeeExperiment(se = NULL, de_results = NULL)
+DeeDeeExperiment(se = NULL, de_results = NULL, dds = NULL, ...)
 }
 \arguments{
 \item{se}{A \code{SummarizedExperiment} object, that will be used as a scaffold to
