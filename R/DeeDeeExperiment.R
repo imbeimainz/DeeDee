@@ -363,23 +363,33 @@ DeeDeeExperiment <- function(se = NULL,
   res_tbl <- topTags(res_de, n = nrow(res_de), sort.by = "none")
 
 
+  # identify the logFC colss
+  logFC_cols <- grep("^logFC", colnames(res_tbl), value = TRUE)
+  
+  
   matched_ids <- match(rownames(se), rownames(res_tbl)) # we align de res with se
   # only valid indices
   valid_matches <- !is.na(matched_ids)
-
-
-  # Pre-fill rowData with NA
-  rowData(se)[[paste0(de_name, "_log2FoldChange")]] <- NA
+  
+  # pre-fill rowData with NA the assign the corresponding values only for matched
+  # indices for logFC, accounting for the fact that the logFC column name in edgeR
+  # depends on whether we have 1 or multple contrasts
+  for (i in logFC_cols) {
+    rowData(se)[[paste0(de_name, "_log2FoldChange")]] <- NA
+    # assign correspionding values
+    rowData(se)[[paste0(de_name, "_log2FoldChange")]][valid_matches] <- res_tbl$table[[i]][matched_ids[valid_matches]]
+  }
+  
+  # pre-fill rowData with NA the assign the corresponding values for matched indices for pval and padj
   rowData(se)[[paste0(de_name, "_pvalue")]]         <- NA
   rowData(se)[[paste0(de_name, "_padj")]]           <- NA
-
-
+  
+  
   # assign values only for matched indices, to have on both sides the
   # same length. we keep NA for unmatched genes
-  rowData(se)[[paste0(de_name, "_log2FoldChange")]][valid_matches] <- res_tbl$table$logFC[matched_ids[valid_matches]]
   rowData(se)[[paste0(de_name, "_pvalue")]][valid_matches]         <- res_tbl$table$PValue[matched_ids[valid_matches]]
   rowData(se)[[paste0(de_name, "_padj")]][valid_matches]           <- res_tbl$table$FDR[matched_ids[valid_matches]]
-
+  
   dea_contrast <- list(
     alpha = NA,
     lfcThreshold = NA,
@@ -389,13 +399,9 @@ DeeDeeExperiment <- function(se = NULL,
     # object_name = deparse(substitute(res_tbl)),
     package = "edgeR"
   )
-
-  return(
-    list(
-      se = se,
-      dea_contrast = dea_contrast
-    )
-  )
+  
+  return(list(se = se,
+              dea_contrast = dea_contrast))
 }
 
 
