@@ -15,6 +15,8 @@
 #' store the DE related information.
 #' @param de_results A named list of DE results, in any of the formats supported by
 #' the `DeeDee` package (currently: results from DESeq2, edgeR, limma).
+#' @param shrink_lfc A logical determining whether to shrink logFC in case the
+#' provided se is a `dds` object.
 #' @param ... Additional arguments related to the `DESeq2::results()` function
 #' that extracts DE results from the `dds` object.
 #'
@@ -64,6 +66,7 @@
 #' )
 DeeDeeExperiment <- function(se = NULL,
                              de_results = NULL,
+                             shrink_lfc = TRUE,
                              ...) {
 
   # old <- S4Vectors:::disableValidity()
