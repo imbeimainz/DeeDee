@@ -15,7 +15,6 @@
 #' store the DE related information.
 #' @param de_results A named list of DE results, in any of the formats supported by
 #' the `DeeDee` package (currently: results from DESeq2, edgeR, limma).
-#' @param dds A `DESeqDataSet` object, that contains DE results after running `DESeq()`.
 #' @param ... Additional arguments related to the `DESeq2::results()` function
 #' that extracts DE results from the `dds` object.
 #'
@@ -65,7 +64,6 @@
 #' )
 DeeDeeExperiment <- function(se = NULL,
                              de_results = NULL,
-                             dds = NULL,
                              ...) {
 
   # old <- S4Vectors:::disableValidity()
@@ -74,105 +72,125 @@ DeeDeeExperiment <- function(se = NULL,
   #   on.exit(S4Vectors:::disableValidity(old))
   # }
   
+  # set up de results list
   extracted_de_results <- list()
   
+  # set up functional enrichment results list
+  extracted_enrich_results <- list()
+  
   if (!is.null(de_results)) {
+    # capture variable name as a character
     entry_name <- deparse(substitute(de_results))
     de_results <- .check_de_results(de_results, entry_name)
-
     # assigned to the final de results list that might be later populated
     extracted_de_results <- append(extracted_de_results, de_results)
     # check validity of de results format before proceeding just in case
     extracted_de_results <- .check_de_results(extracted_de_results)
   }
   
-  # if dds is provided, extract de results
-  if (!is.null(dds)) {
-    if (!is(dds, "DESeqDataSet")) {
-      stop("'dds' must be a DESeqDataSet object!")
-    }
-    
-    message("Extracting differential expression results from DESeqDataSet...")
-    
-    # get available contrasts
-    contrast_names <- resultsNames(dds)
-    # remove intercept to avoid conflicts, as it is not informative for comparisons
-    contrast_names <- contrast_names[contrast_names != "Intercept"]
-    
-    if (length(contrast_names) == 0) {
-      stop("No results found in the DESeqDataSet. You must run `DESeq()` first.")
-    } else {
-      for (contrast in contrast_names) {
-        # capturing whether we specify arguments for the results extraction
-        add_res_arg <- c(...)
-        if (length(add_res_arg) == 0) {
-          message("Extracting results for '", contrast, "' with default parameters")
-        } else {
-          message("Extracting results for '", contrast, "' with the following parameters:",
-                  paste(paste0(names(add_res_arg), " = ", add_res_arg),collapse = " ,"))
-          
-        }
-        extracted_de_results[[contrast]] <- results(dds, name = contrast, ...)
-      }
-      # merge all de results, also when dds and de_results are provided
-      #extracted_de_results <- c(extracted_de_results, de_results)
-    }
-    
-    # when both se and dds are provided ???
-    if (is.null(se)) {
-      message("Using provided dds to construct RangedSummarizedExperiment...")
-      se <- as(dds, "RangedSummarizedExperiment")
-    } else {
-      warning("You are providing both 'se' and 'dds'. The 'se' object will be overwritten with data from 'dds'")
-      se <- as(dds, "RangedSummarizedExperiment")
-    }
-  }
-
-  # check validity of de results format
-  extracted_de_results <- .check_de_results(extracted_de_results)
-  
-  # se <- SummarizedExperiment(...)
-  if(!is.null(se)) {
-    if (!is(se, "RangedSummarizedExperiment")) {
-      if (is(se, "SummarizedExperiment")) {
-        se <- as(se, "RangedSummarizedExperiment")
+  if (!is.null(se)) {
+    # check if se is a dds object to set up whether to extract results from it or not
+    if (is(se, "DESeqDataSet")) {
+      message("Checking available contrasts in DESeqDataSet...")
+      # available contrasts
+      contrast_names <- DESeq2::resultsNames(se)
+      # remove intercept to avoid conflicts, as it is not informative for comparisons
+      contrast_names <- contrast_names[contrast_names != "Intercept"]
+      
+      if (length(contrast_names) == 0) {
+        stop("No results found in the DESeqDataSet. You must run `DESeq()` first.")
       } else {
-        stop("'se' must be a RangedSummarizedExperiment object")
+        for (contrast in contrast_names) {
+          if (contrast %in% names(extracted_de_results)) {
+            # if the name of the contrast in dds exists already in extracted_de_results
+            # (i.e not empty) then don't extract results to avoid extracting the same twice
+            message(
+              "Contrast '",
+              contrast,
+              "' is already in extracted_de_results. Skipping..."
+            )
+            next # to skip this contrast
+          }
+          # if extracted_de_results is empty or the name of the contrast in dds doesn't
+          # exist in extracted_de_results, then extract results
+          # capturing additional arguments for the extraction if provided
+          ### gotta figure out how to handle all the msg printed on the console!
+          add_res_arg <- c(...)
+          if (length(add_res_arg) == 0) {
+            message("Extracting results for '",
+                    contrast,
+                    "' with default parameters")
+          } else {
+            message(
+              "Extracting results for '",
+              contrast,
+              "' with the following parameters:",
+              paste(paste0(
+                names(add_res_arg), " = ", add_res_arg
+              ), collapse = " ,")
+            )
+          }
+          extracted_de_results[[contrast]] <- DESeq2::results(se, name = contrast, ...)
+          
+          # perform shrinkage if requested
+          if (shrink_lfc == TRUE) {
+            message(
+              "Performing LFC shrinkage using 'apeglm' algorithm for contrast: '",
+              contrast,
+              " ' ..."
+            )
+            extracted_de_results[[contrast]] <- DESeq2::lfcShrink(se,
+                                                          coef = contrast,
+                                                          res = extracted_de_results[[contrast]],
+                                                          type = "apeglm") # maybe give flexibility for this???
+          }
+        }
       }
     }
-  } else {
-    if(length(extracted_de_results) == 0)
-      stop("You have to provide at least an se object, a dds object or a de_results object")
-
+    
+    else {
+      if (!is(se, "RangedSummarizedExperiment")) {
+        # check if it is SE and convert it into a RangedSE
+        if (is(se, "SummarizedExperiment")) {
+          se <- as(se, "RangedSummarizedExperiment")
+        } else {
+          stop("'se' must be a RangedSummarizedExperiment object")
+        }
+      }
+      
+    }
+    
+  }
+  else {
+    # if nothing is passed, return error
+    if (length(extracted_de_results) == 0) {
+      stop("You have to provide at least an se object or a de_results object!")
+    }
+    # if no se passed but extracted_de_results is not empty, create a mock from it
     message("creating a mock SE from the rows of the DE result objects")
     # mock up the se from the extracted_de_results
     first_de <- extracted_de_results[[1]]
-
+    
     # independently of the class, the feature names are in the
     # rownames slot, TODO: check
     ids <- rownames(first_de)
-
-    rd_mock <- DataFrame(
-      gene_id = ids,
-      row.names = ids)
-
+    
+    rd_mock <- DataFrame(gene_id = ids, row.names = ids)
+    
     # way1
-    se_mock <- SummarizedExperiment(
-      assays = SimpleList(),
-      rowData = rd_mock
-    )
+    se_mock <- SummarizedExperiment(assays = SimpleList(), rowData = rd_mock)
     # se_mock@NAMES <- NULL
     # rownames(se_mock) <- ids
-
+    
     # no clue why this is strictly needed, but still it seems it is, if mocking up
     se <- as(se_mock, "RangedSummarizedExperiment")
   }
-
+  
+  
   # TODO: if no SE is really provided, instantiate some rownames, at least directly
   # from the rownames of the result objects
   # TODO: the row names are taken from the FIRST object in the de results then - or
   # from the union of all of them?
-
   
   if (is.null(de_results) && is.null(dds)) {
     object <- new("DeeDeeExperiment",
