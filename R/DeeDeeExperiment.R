@@ -80,7 +80,6 @@ DeeDeeExperiment <- function(se = NULL,
     entry_name <- deparse(substitute(de_results))
     de_results <- .check_de_results(de_results, entry_name)
 
-    extracted_de_results <- c(extracted_de_results, de_results)
     # assigned to the final de results list that might be later populated
     extracted_de_results <- append(extracted_de_results, de_results)
     # check validity of de results format before proceeding just in case
