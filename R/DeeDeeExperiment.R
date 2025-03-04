@@ -81,6 +81,10 @@ DeeDeeExperiment <- function(se = NULL,
     de_results <- .check_de_results(de_results, entry_name)
 
     extracted_de_results <- c(extracted_de_results, de_results)
+    # assigned to the final de results list that might be later populated
+    extracted_de_results <- append(extracted_de_results, de_results)
+    # check validity of de results format before proceeding just in case
+    extracted_de_results <- .check_de_results(extracted_de_results)
   }
   
   # if dds is provided, extract de results
