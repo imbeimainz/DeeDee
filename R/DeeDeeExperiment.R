@@ -288,9 +288,12 @@ DeeDeeExperiment <- function(se = NULL,
   
   # extract columns
   res_tbl <- topTags(res_de, n = nrow(res_de), sort.by = "none")
-
-
-  # identify the logFC colss
+  
+  # p value different from NA respect the 0-1 interval
+  stopifnot(all(na.omit(res_tbl$PValue <= 1)) &
+              all(na.omit(res_tbl$PValue > 0)))
+  
+  # identify the logFC cols
   logFC_cols <- grep("^logFC", colnames(res_tbl), value = TRUE)
   
   
