@@ -419,24 +419,34 @@ DeeDeeExperiment <- function(se = NULL,
 }
 
 
-# if de_results is one element, this function will capture the variable name and
-# convert it into a character string to be passed to .check_de_results
 
-.check_de_results <- function(x, entry_name=NULL) {
-  # checks that:
-  # it is a list
-  # its component are either of the expected/accepted elements
-  # checks their columns?
-
-  #### update : checks and processes the input
-  # if one single element, i.e not a list, convert if into a list of length 1
+.check_de_results <- function(x, entry_name = NULL) {
+  ## checks the DE  input and processes it if it's 1 element
+  ## if one single element is given, i.e not a list, it converts it into a list
+  ## of length 1 and ensure it has a name
   if (is(x, "DGEExact") ||
       is(x, "DGELRT") || is(x, "MArrayLM") ||
       is(x, "DESeqResults")) {
+    # convert into a named list
+    x <- list(x)
+    names(x) <- entry_name
+  }
+  
+  ## if a list
+  ok_types <- unlist(lapply(x, function(arg) {
+    is(arg, "DESeqResults") || is(arg, "DGEExact") ||
+      is(arg, "DGELRT") || is(arg, "MArrayLM")
+  }))
+  
+  if (!all(ok_types)) {
+    stop("All elements in the list must be of type DESeqResults, DGEExact, DGELRT, or MArrayLM.")
+  }
+  if (is.null(names(x)) || any(names(x) == "")) {
+    stop("All elements in the provided de_results list must be named!")
+  }
+  return(x)
+}
 
-    if(is.null(entry_name)) {
-      stop("You must provide a name for your de results!")
-    }
 
     x <- list(x)
     names(x) <- entry_name
