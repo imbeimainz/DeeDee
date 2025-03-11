@@ -284,10 +284,8 @@ DeeDeeExperiment <- function(se = NULL,
 #' # TODO example
 .importDE_edgeR <- function(se, res_de, de_name) {
   # checks object
-  stopifnot(
-    is(res_de, "DGEExact") | is(res_de, "DGELRT")
-  )
-
+  stopifnot(is(res_de, "DGEExact") || is(res_de, "DGELRT"))
+  
   # extract columns
   res_tbl <- topTags(res_de, n = nrow(res_de), sort.by = "none")
 
