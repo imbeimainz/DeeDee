@@ -6,7 +6,12 @@
 \alias{DeeDeeExperiment}
 \title{The DeeDeeExperiment class}
 \usage{
-DeeDeeExperiment(se = NULL, de_results = NULL, dds = NULL, ...)
+DeeDeeExperiment(
+  se = NULL,
+  de_results = NULL,
+  enrich_results = NULL,
+  verbose = TRUE
+)
 }
 \arguments{
 \item{se}{A \code{SummarizedExperiment} object, that will be used as a scaffold to
@@ -34,7 +39,7 @@ conversion functions to uniform the names and set of information which will
 be stored in the returned \code{DeeDeeExperiment} object.
 The names of the list will be used to define the \code{contrasts} for the different
 DE analyses included, which will determine the way to access the information
-stored in the \code{dea} slot of the \code{DeeDeeExperiment} object
+stored in the \code{dea} slot of the \code{DeeDeeExperiment} object.
 
 Since a \code{DeeDeeExperiment} is also a \code{SummarizedExperiment} object, it can be
 seamlessly provided downstream for visualization and in-depth exploration to

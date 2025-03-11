@@ -24,9 +24,9 @@
 
 \S4method{remove_dea}{DeeDeeExperiment,character}(x, dea_name)
 
-\S4method{get_dea_df}{DeeDeeExperiment,character}(x, dea_name)
+\S4method{get_dea_df}{DeeDeeExperiment,character}(x, dea_name, verbose = TRUE)
 
-\S4method{get_dea_list}{DeeDeeExperiment}(x)
+\S4method{get_dea_list}{DeeDeeExperiment}(x, verbose = TRUE)
 }
 \arguments{
 \item{x}{A \code{\link[=DeeDeeExperiment]{DeeDeeExperiment()}} object}
