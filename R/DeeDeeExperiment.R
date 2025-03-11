@@ -229,10 +229,9 @@ DeeDeeExperiment <- function(se = NULL,
   # contain the feature ids
   
   # p value different from NA respect the 0-1 interval
-  stopifnot(
-    all(na.omit(res_de$pvalue <= 1)) & all(na.omit(res_de$pvalue > 0))
-  )
-
+  stopifnot(all(na.omit(res_de$pvalue <= 1)) &
+              all(na.omit(res_de$pvalue > 0)))
+  
   #matched_ids <- match(rownames(res_de), rownames(se))
   
   matched_ids <- match(rownames(se), rownames(res_de)) # we align de res with se
@@ -374,6 +373,10 @@ DeeDeeExperiment <- function(se = NULL,
                       sort.by = "none")
 
 
+  # p value different from NA respect the 0-1 interval
+  stopifnot(all(na.omit(res_tbl$P.Value <= 1)) &
+              all(na.omit(res_tbl$P.Value > 0)))
+  
   #matched_ids <- match(rownames(res_tbl), rownames(se))
   
   matched_ids <- match(rownames(se), rownames(res_tbl)) # we align de res with se
