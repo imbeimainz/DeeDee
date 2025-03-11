@@ -126,11 +126,11 @@ setMethod("add_dea",
             dde_ids <- rownames(x)
 
             # update rowData, naming them correctly
-            for (i in names(dea)){
+            for (i in names(dea)) {
               this_de <- dea[[i]]
 
               # do different things according to what these objects are
-              if(is(this_de, "DESeqResults")) {
+              if (is(this_de, "DESeqResults")) {
 
 
                 matched_ids <- match(rownames(x), rownames(this_de)) # we align de res with se
@@ -165,37 +165,39 @@ setMethod("add_dea",
                   n = nrow(this_de),
                   sort.by = "none"
                 )
+                
+                # p value different from NA respect the 0-1 interval
+                stopifnot(all(na.omit(res_tbl$PValue <= 1)) &
+                            all(na.omit(res_tbl$PValue > 0)))
+                
+                # identify the logFC cols
+                logFC_cols <- grep("^logFC", colnames(res_tbl), value = TRUE)
 
                 matched_ids <- match(rownames(x), rownames(res_tbl)) # we align de res with se
                 # only valid indices
                 valid_matches <- !is.na(matched_ids)
-
-
-                # Pre-fill rowData with NA
-                rowData(x)[[paste0(i, "_log2FoldChange")]] <- NA
+                
+                # pre-fill rowData with NA the assign the corresponding values only for matched
+                # indices for logFC, accounting for the fact that the logFC column name in edgeR
+                # depends on whether we have 1 or multiple contrasts
+                for (j in logFC_cols) {
+                  rowData(x)[[paste0(i, "_log2FoldChange")]] <- NA
+                  # assign corresponding values
+                  rowData(x)[[paste0(i, "_log2FoldChange")]][valid_matches] <- res_tbl$table[[j]][matched_ids[valid_matches]]
+                }
+                
+                # pre-fill rowData with NA the assign the corresponding values for matched indices for pval and padj
                 rowData(x)[[paste0(i, "_pvalue")]]         <- NA
                 rowData(x)[[paste0(i, "_padj")]]           <- NA
 
 
                 # assign values only for matched indices, to have on both sides the
                 # same length. we keep NA for unmatched genes
-                rowData(x)[[paste0(i, "_log2FoldChange")]][valid_matches] <- res_tbl$table$logFC[matched_ids[valid_matches]]
                 rowData(x)[[paste0(i, "_pvalue")]][valid_matches]         <- res_tbl$table$PValue[matched_ids[valid_matches]]
                 rowData(x)[[paste0(i, "_padj")]][valid_matches]           <- res_tbl$table$FDR[matched_ids[valid_matches]]
 
-
-
-                # if not tested, add NA - everywhere? -> pre-fill?
-                # avoid NA as a logical vector??
-                # rowData(x)[[paste0(i,"_log2FoldChange")]] <- NA
-                # rowData(x)[[paste0(i,"_pvalue")]]         <- NA
-                # rowData(x)[[paste0(i,"_padj")]]           <- NA
-                #
-                # # populate using edgeR columns
-                # rowData(x)[[paste0(i,"_log2FoldChange")]][!is.na(matched_ids)] <- res_tbl$table$logFC
-                # rowData(x)[[paste0(i,"_pvalue")]][!is.na(matched_ids)]         <- res_tbl$table$PValue
-                # rowData(x)[[paste0(i,"_padj")]][!is.na(matched_ids)]           <- res_tbl$table$FDR
-
+                #print(colnames(rowData(x)))
+                
                 # store metadata
                 dea_contrasts[[i]] <- list(
                   alpha = NA,
@@ -212,6 +214,10 @@ setMethod("add_dea",
                   number  = nrow(this_de),
                   sort.by = "none"
                 )
+                
+                # p value different from NA respect the 0-1 interval
+                stopifnot(all(na.omit(res_tbl$P.Value <= 1)) &
+                            all(na.omit(res_tbl$P.Value > 0)))
 
                 matched_ids <- match(rownames(x), rownames(res_tbl)) # we align de res with se
                 # only valid indices
@@ -247,7 +253,7 @@ setMethod("add_dea",
                 dea_contrasts[[i]] <- list(
                   alpha = NA,
                   lfcThreshold = NA,
-                  metainfo_logFC = res_tbl$comparison,
+                  metainfo_logFC = NA,
                   metainfo_pvalue = NA,
                   original_object = this_de,
                   package = "limma"
@@ -296,7 +302,7 @@ setMethod("remove_dea",
             for (i in deas_to_remove) {
               cols_to_remove <- c(paste0(i, c("_log2FoldChange", "_pvalue", "_padj")))
               rowData(x) <- rowData(x)[, !(colnames(rowData(x)) %in% cols_to_remove)]
-              # update the deslot
+              # update the de slot
               dea(x)[[i]] <- NULL
             }
 
@@ -316,7 +322,8 @@ setMethod("remove_dea",
 setMethod("get_dea_df",
           signature = c("DeeDeeExperiment", "character"),
           definition = function(x,
-                                dea_name) {
+                                dea_name,
+                                verbose = TRUE) {
             deas <- dea(x)
             dea_names <- names(deas)
 
@@ -324,8 +331,11 @@ setMethod("get_dea_df",
               stop("dea not found")
             }
 
+            #
+            
             rd_info <- paste0(dea_name,
                               c("_log2FoldChange", "_pvalue", "_padj"))
+            #print(rd_info)
 
             # if (! all(rd_info %in% colnames(rowData(x)))) {
             #   stop("Columns not found")
@@ -333,11 +343,37 @@ setMethod("get_dea_df",
 
             # check for missing columns, for a more precise feedback on the error
             missing_cols <- rd_info[!rd_info %in% colnames(rowData(x))]
-
+            #print(missing_cols)
+            
+            
+            # maybe check for rowname mismatches potential gene version issue?
+            # maybe not interesting to print back all missmatches in casee all rownames
+            # dont match
+            rownames_x <- rownames(rowData(x))
+            rownames_y <- rownames(deas[[dea_name]])
+            mismatched_rows <- sum(!rownames_x %in% rownames_y)
+            
+            
+            affected_deas <- character()
+            if (mismatched_rows > 0) {
+              affected_deas <- c(affected_deas, dea_name)
+            }
+            
+          
+            if (length(affected_deas) > 0) {
+              if (verbose)
+                warning(
+                  "Mismatch detected between `rownames(rowData(x))` and rownames for dea element(s): ",
+                  paste(unique(affected_deas), collapse = ", ")
+                )
+            }
+            
             if (length(missing_cols) > 0) {
               stop("The following columns are missing: ",
                    paste(missing_cols, collapse = ", "))
             }
+            
+            
 
             out <- rowData(x)[, rd_info]
 
@@ -349,16 +385,40 @@ setMethod("get_dea_df",
 #' @export
 setMethod("get_dea_list",
           signature = c("DeeDeeExperiment"),
-          definition = function(x) {
+          definition = function(x, verbose = TRUE) {
+            verbose <- verbose
             deas <- dea(x)
             dea_names <- names(deas)
 
             dea_list <- list()
+            mismatch_info <- list()
+            affected_deas <- character()
 
             for (i in dea_names) {
-              dea_list[[i]] <- as.data.frame(get_dea_df(x, i))
+              dea_list[[i]] <- as.data.frame(get_dea_df(x, i, verbose))
               colnames(dea_list[[i]]) <- c("log2FoldChange", "pvalue", "padj")
+              
+              # maybe check for rowname mismatches potential gene version issue?
+              # maybe not interesting to print back all missmatches in casee all rownames
+              # dont match
+              rownames_x <- rownames(rowData(x))
+              rownames_y <- rownames(deas[[i]])
+              
+              mismatched_rows <- sum(!rownames_x %in% rownames_y)
+              
+              
+              if (mismatched_rows > 0) {
+                affected_deas <- c(affected_deas, i)
+              }
             }
+            
+            
+            # if (length(affected_deas) > 0) {
+            #   warning(
+            #     "Mismatch detected between `rownames(rowData(x))` and rownames for dea element(s): ",
+            #     paste(unique(affected_deas), collapse = ", ")
+            #   )
+            # } # we might not need this warning since the call of get_dea_df will trigger individual warnings
 
             return(dea_list)
           }
