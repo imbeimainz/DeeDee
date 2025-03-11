@@ -122,6 +122,12 @@ DeeDeeExperiment <- function(se = NULL,
     
     # no clue why this is strictly needed, but still it seems it is, if mocking up
     se <- as(se_mock, "RangedSummarizedExperiment")
+    
+    
+    
+    
+    
+    
   }
   
   
@@ -141,19 +147,19 @@ DeeDeeExperiment <- function(se = NULL,
   
   # TODO: does not have to relate to an SE which has all the slots and all
   # ...
-
-
+  
+  
   # TODO: additional checks
   se_out <- se
-
+  
   # here is where I add the names in the rowData to make all info matched
   # checks on the names
   #names(de_results)
   # if not there, "force add"
   # TODO
-
+  
   dde_ids <- rownames(se_out)
-
+  
   dea_contrasts <- list()
   
   for (i in names(de_results)) {
@@ -164,7 +170,7 @@ DeeDeeExperiment <- function(se = NULL,
       input_deseq2 <- .importDE_DESeq2(se_out, this_de, i)
       se_out <- input_deseq2$se
       dea_contrasts[[i]] <- input_deseq2$dea_contrast
-
+      
       
     } else if (is(this_de, "DGEExact") | is(this_de, "DGELRT")) {
       input_edgeR <- .importDE_edgeR(se_out, this_de, i)
@@ -178,9 +184,9 @@ DeeDeeExperiment <- function(se = NULL,
       dea_contrasts[[i]] <- input_limma$dea_contrast
     }
   }
-
+  
   # rowData(dde)[["new_rd"]] <- de_name
-
+  
   object <- new("DeeDeeExperiment",
                 se_out,
                 dea = dea_contrasts,
@@ -188,6 +194,7 @@ DeeDeeExperiment <- function(se = NULL,
   metadata(object)[["version"]] <- packageVersion("DeeDee")
   
   return(object)
+  
 }
 
 
@@ -215,41 +222,37 @@ DeeDeeExperiment <- function(se = NULL,
 .importDE_DESeq2 <- function(se, res_de, de_name) {
   # checks TODO:
   # correct object format
-  stopifnot(
-    is(res_de, "DESeqResults")
-  )
+  stopifnot(is(res_de, "DESeqResults"))
   # contain the right columns
-  stopifnot(
-    all(c("log2FoldChange", "pvalue", "padj") %in% colnames(res_de))
-  )
-
+  stopifnot(all(c("log2FoldChange", "pvalue", "padj") %in% colnames(res_de)))
+  
   # contain the feature ids
-
+  
   # p value different from NA respect the 0-1 interval
   stopifnot(
     all(na.omit(res_de$pvalue <= 1)) & all(na.omit(res_de$pvalue > 0))
   )
 
   #matched_ids <- match(rownames(res_de), rownames(se))
-
+  
   matched_ids <- match(rownames(se), rownames(res_de)) # we align de res with se
   # only valid indices
   valid_matches <- !is.na(matched_ids)
-
-
+  
+  
   # Pre-fill rowData with NA
   rowData(se)[[paste0(de_name, "_log2FoldChange")]] <- NA
   rowData(se)[[paste0(de_name, "_pvalue")]]         <- NA
   rowData(se)[[paste0(de_name, "_padj")]]           <- NA
-
-
+  
+  
   # assign values only for matched indices, to have on both sides the
   # same length. we keep NA for unmatched genes
   rowData(se)[[paste0(de_name, "_log2FoldChange")]][valid_matches] <- res_de$log2FoldChange[matched_ids[valid_matches]]
   rowData(se)[[paste0(de_name, "_pvalue")]][valid_matches]         <- res_de$pvalue[matched_ids[valid_matches]]
   rowData(se)[[paste0(de_name, "_padj")]][valid_matches]           <- res_de$padj[matched_ids[valid_matches]]
-
-
+  
+  
   dea_contrast <- list(
     alpha = metadata(res_de)$alpha,
     lfcThreshold = metadata(res_de)$lfcThreshold,
@@ -259,13 +262,8 @@ DeeDeeExperiment <- function(se = NULL,
     # object_name = deparse(substitute(res_de)),
     package = "DESeq2"
   )
-
-  return(
-    list(
-      se = se,
-      dea_contrast = dea_contrast
-    )
-  )
+  
+  return(list(se = se, dea_contrast = dea_contrast))
 }
 
 
@@ -305,7 +303,7 @@ DeeDeeExperiment <- function(se = NULL,
   
   # pre-fill rowData with NA the assign the corresponding values only for matched
   # indices for logFC, accounting for the fact that the logFC column name in edgeR
-  # depends on whether we have 1 or multple contrasts
+  # depends on whether we have 1 or multiple contrasts
   for (i in logFC_cols) {
     rowData(se)[[paste0(de_name, "_log2FoldChange")]] <- NA
     # assign correspionding values
@@ -332,8 +330,7 @@ DeeDeeExperiment <- function(se = NULL,
     package = "edgeR"
   )
   
-  return(list(se = se,
-              dea_contrast = dea_contrast))
+  return(list(se = se, dea_contrast = dea_contrast))
 }
 
 
@@ -359,16 +356,17 @@ DeeDeeExperiment <- function(se = NULL,
 .importDE_limma <- function(se, res_de, de_name) {
   # checks object
   stopifnot(is(res_de, "MArrayLM"))
-
+  
   # make sure there are at least 2 coefficients
-  if (ncol(res_de$coefficients) < 2) { # we still need to manage the handling of 1 contrast
+  if (ncol(res_de$coefficients) < 2) {
+    # we still need to manage the handling of 1 contrast
     warning(
       "The provided MArrayLM object has only ",
       ncol(res_de$coefficients),
       " coefficient(s). At least 2 are required."
     )
   }
-
+  
   # extract columns
   res_tbl <- topTable(res_de,
                       coef = 2,
@@ -377,24 +375,24 @@ DeeDeeExperiment <- function(se = NULL,
 
 
   #matched_ids <- match(rownames(res_tbl), rownames(se))
-
+  
   matched_ids <- match(rownames(se), rownames(res_tbl)) # we align de res with se
   # only valid indices
   valid_matches <- !is.na(matched_ids)
-
-
+  
+  
   # Pre-fill rowData with NA
   rowData(se)[[paste0(de_name, "_log2FoldChange")]] <- NA
   rowData(se)[[paste0(de_name, "_pvalue")]]         <- NA
   rowData(se)[[paste0(de_name, "_padj")]]           <- NA
-
-
+  
+  
   # assign values only for matched indices, to have on both sides the
   # same length. we keep NA for unmatched genes
   rowData(se)[[paste0(de_name, "_log2FoldChange")]][valid_matches] <- res_tbl$logFC[matched_ids[valid_matches]]
   rowData(se)[[paste0(de_name, "_pvalue")]][valid_matches]         <- res_tbl$P.Value[matched_ids[valid_matches]]
   rowData(se)[[paste0(de_name, "_padj")]][valid_matches]           <- res_tbl$adj.P.Val[matched_ids[valid_matches]]
-
+  
   dea_contrast <- list(
     alpha = NA,
     lfcThreshold = NA,
@@ -404,15 +402,10 @@ DeeDeeExperiment <- function(se = NULL,
     # object_name = deparse(substitute(res_tbl)),
     package = "limma"
   )
-
-  return(
-    list(
-      se = se,
-      dea_contrast = dea_contrast
-    )
-  )
-
-
+  
+  return(list(se = se, dea_contrast = dea_contrast))
+  
+  
   # returns info (in the standardized manner)
 
 }
@@ -460,11 +453,9 @@ DeeDeeExperiment <- function(se = NULL,
 
 
 
-
 deedee_import <- function(x) {
-
   # legacy code:
-
+  
   # # ----------------------------- argument check ------------------------------
   # choices <- c("DESeq2", "edgeR", "limma")
   # checkmate::assertChoice(input_type, choices)
@@ -490,5 +481,3 @@ deedee_import <- function(x) {
   # }
   # return(input)
 }
-
-
