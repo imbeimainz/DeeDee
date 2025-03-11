@@ -15,10 +15,6 @@
 #' store the DE related information.
 #' @param de_results A named list of DE results, in any of the formats supported by
 #' the `DeeDee` package (currently: results from DESeq2, edgeR, limma).
-#' @param shrink_lfc A logical determining whether to shrink logFC in case the
-#' provided se is a `dds` object.
-#' @param ... Additional arguments related to the `DESeq2::results()` function
-#' that extracts DE results from the `dds` object.
 #'
 #' @details
 #' The `se` parameter can be optionally left unspecified. If this is the case,
@@ -31,7 +27,7 @@
 #' be stored in the returned `DeeDeeExperiment` object.
 #' The names of the list will be used to define the `contrasts` for the different
 #' DE analyses included, which will determine the way to access the information
-#' stored in the `dea` slot of the `DeeDeeExperiment` object
+#' stored in the `dea` slot of the `DeeDeeExperiment` object.
 #'
 #' Since a `DeeDeeExperiment` is also a `SummarizedExperiment` object, it can be
 #' seamlessly provided downstream for visualization and in-depth exploration to
@@ -66,17 +62,12 @@
 #' )
 DeeDeeExperiment <- function(se = NULL,
                              de_results = NULL,
-                             shrink_lfc = TRUE,
-                             ...) {
-
   # old <- S4Vectors:::disableValidity()
   # if (!isTRUE(old)) {
   #   S4Vectors:::disableValidity(TRUE)
   #   on.exit(S4Vectors:::disableValidity(old))
   # }
   
-  # set up de results list
-  extracted_de_results <- list()
   
   # set up functional enrichment results list
   extracted_enrich_results <- list()
@@ -85,73 +76,9 @@ DeeDeeExperiment <- function(se = NULL,
     # capture variable name as a character
     entry_name <- deparse(substitute(de_results))
     de_results <- .check_de_results(de_results, entry_name)
-    # assigned to the final de results list that might be later populated
-    extracted_de_results <- append(extracted_de_results, de_results)
-    # check validity of de results format before proceeding just in case
-    extracted_de_results <- .check_de_results(extracted_de_results)
   }
   
   if (!is.null(se)) {
-    # check if se is a dds object to set up whether to extract results from it or not
-    if (is(se, "DESeqDataSet")) {
-      message("Checking available contrasts in DESeqDataSet...")
-      # available contrasts
-      contrast_names <- DESeq2::resultsNames(se)
-      # remove intercept to avoid conflicts, as it is not informative for comparisons
-      contrast_names <- contrast_names[contrast_names != "Intercept"]
-      
-      if (length(contrast_names) == 0) {
-        stop("No results found in the DESeqDataSet. You must run `DESeq()` first.")
-      } else {
-        for (contrast in contrast_names) {
-          if (contrast %in% names(extracted_de_results)) {
-            # if the name of the contrast in dds exists already in extracted_de_results
-            # (i.e not empty) then don't extract results to avoid extracting the same twice
-            message(
-              "Contrast '",
-              contrast,
-              "' is already in extracted_de_results. Skipping..."
-            )
-            next # to skip this contrast
-          }
-          # if extracted_de_results is empty or the name of the contrast in dds doesn't
-          # exist in extracted_de_results, then extract results
-          # capturing additional arguments for the extraction if provided
-          ### gotta figure out how to handle all the msg printed on the console!
-          add_res_arg <- c(...)
-          if (length(add_res_arg) == 0) {
-            message("Extracting results for '",
-                    contrast,
-                    "' with default parameters")
-          } else {
-            message(
-              "Extracting results for '",
-              contrast,
-              "' with the following parameters:",
-              paste(paste0(
-                names(add_res_arg), " = ", add_res_arg
-              ), collapse = " ,")
-            )
-          }
-          extracted_de_results[[contrast]] <- DESeq2::results(se, name = contrast, ...)
-          
-          # perform shrinkage if requested
-          if (shrink_lfc == TRUE) {
-            message(
-              "Performing LFC shrinkage using 'apeglm' algorithm for contrast: '",
-              contrast,
-              " ' ..."
-            )
-            extracted_de_results[[contrast]] <- DESeq2::lfcShrink(se,
-                                                          coef = contrast,
-                                                          res = extracted_de_results[[contrast]],
-                                                          type = "apeglm") # maybe give flexibility for this???
-          }
-        }
-      }
-    }
-    
-    else {
       if (!is(se, "RangedSummarizedExperiment")) {
         # check if it is SE and convert it into a RangedSE
         if (is(se, "SummarizedExperiment")) {
@@ -162,14 +89,12 @@ DeeDeeExperiment <- function(se = NULL,
       }
       
     }
-    
-  }
   else {
     # if nothing is passed, return error
-    if (length(extracted_de_results) == 0) {
+    if (length(de_results) == 0) {
       stop("You have to provide at least an se object or a de_results object!")
     }
-    # if no se passed but extracted_de_results is not empty, create a mock from it
+    # if no se passed but de_results is not empty, create a mock from it
     message("creating a mock SE from the rows of the DE result objects")
     # mock up the se from the extracted_de_results
     first_de <- extracted_de_results[[1]]
@@ -195,11 +120,8 @@ DeeDeeExperiment <- function(se = NULL,
   # TODO: the row names are taken from the FIRST object in the de results then - or
   # from the union of all of them?
   
-  if (is.null(de_results) && is.null(dds)) {
     object <- new("DeeDeeExperiment",
                   se,
-                  dea = list()
-    )
     
     # stash the package version
     metadata(object)[["version"]] <- packageVersion("DeeDee")
@@ -207,7 +129,6 @@ DeeDeeExperiment <- function(se = NULL,
     return(object)
   }
   
-
   # TODO: does not have to relate to an SE which has all the slots and all
   # ...
 
@@ -217,19 +138,19 @@ DeeDeeExperiment <- function(se = NULL,
 
   # here is where I add the names in the rowData to make all info matched
   # checks on the names
-  names(extracted_de_results)
+  #names(de_results)
   # if not there, "force add"
   # TODO
 
   dde_ids <- rownames(se_out)
 
   dea_contrasts <- list()
-
-  for (i in names(extracted_de_results)){
-    this_de <- extracted_de_results[[i]]
-
+  
+  for (i in names(de_results)) {
+    this_de <- de_results[[i]]
+    
     # do different things according to what these objects are
-    if(is(this_de, "DESeqResults")) {
+    if (is(this_de, "DESeqResults")) {
       input_deseq2 <- .importDE_DESeq2(se_out, this_de, i)
       se_out <- input_deseq2$se
       dea_contrasts[[i]] <- input_deseq2$dea_contrast
@@ -252,12 +173,10 @@ DeeDeeExperiment <- function(se = NULL,
 
   object <- new("DeeDeeExperiment",
                 se_out,
-                dea = dea_contrasts
-  )
-
+                dea = dea_contrasts,
   # stash the package version
   metadata(object)[["version"]] <- packageVersion("DeeDee")
-
+  
   return(object)
 }
 
