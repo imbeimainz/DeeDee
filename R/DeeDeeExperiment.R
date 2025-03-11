@@ -96,12 +96,22 @@ DeeDeeExperiment <- function(se = NULL,
     }
     # if no se passed but de_results is not empty, create a mock from it
     message("creating a mock SE from the rows of the DE result objects")
-    # mock up the se from the extracted_de_results
-    first_de <- extracted_de_results[[1]]
+    # mock up the se from the de_results
+    #first_de <- de_results[[1]]
     
     # independently of the class, the feature names are in the
     # rownames slot, TODO: check
-    ids <- rownames(first_de)
+    #ids <- rownames(first_de)
+    
+    ## check 
+    #stopifnot(!any(sapply(de_results, function(x) is.null(rownames(x)))))
+    
+    if(any(sapply(de_results, function(x) is.null(rownames(x))))) {
+      stop("Some elements in the de_results list do not have rownames!")
+    }
+    
+    ## taking rather the union of all de_res elements
+    ids <- unique(unlist(lapply(de_results, rownames)))
     
     rd_mock <- DataFrame(gene_id = ids, row.names = ids)
     
