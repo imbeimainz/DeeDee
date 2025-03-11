@@ -58,6 +58,16 @@ options(width = 100)
 
 # Introduction {#introduction}
 
+## Why do we need a new class?
+
+TODO, write a couple of sentences for the motivation and how this class is going to streamline dea and fea
+
+In Transcriptomic analyses, Differential Expression Analysis across multiple contrasts often results in many DE tables, which becomes even more challenging in single-cell RNA-seq, where pseudobulk analysis generates results for each cell type. Managing and exploring all these tables efficiently can be challenging. `DeeDee` solves this problem by combining structured data storage with an interactive exploration tool!
+
+## Anatomy of DeeDeeExperiment
+
+TODO, maybe it s interesting to have a schematic representation (like the one for SummarizedExperiment)
+
 This vignette describes how to use the `r BiocStyle::Biocpkg("DeeDee")` package for ......
 
 This package provides ...... 
@@ -182,20 +192,22 @@ sessionInfo()
 
 
 ```{r, echo = FALSE, warning = FALSE, message = FALSE, results = "hide"}
-library(DeeDeeLegacy)
+#library(DeeDeeLegacy)
 data(DE_results_IFNg_naive, package = "DeeDee")
-IFNg_naive <- deedee_prepare(IFNg_naive, "DESeq2")
+#IFNg_naive <- deedee_prepare(IFNg_naive, "DESeq2")
 data(DE_results_IFNg_both, package = "DeeDee")
-IFNg_both <- deedee_prepare(IFNg_both, "DESeq2")
+#IFNg_both <- deedee_prepare(IFNg_both, "DESeq2")
 data(DE_results_Salm_naive, package = "DeeDee")
-Salm_naive <- deedee_prepare(Salm_naive, "DESeq2")
+#Salm_naive <- deedee_prepare(Salm_naive, "DESeq2")
 data(DE_results_Salm_both, package = "DeeDee")
-Salm_both <- deedee_prepare(Salm_both, "DESeq2")
+#Salm_both <- deedee_prepare(Salm_both, "DESeq2")
 
-DeeDee_obj <- list(IFNg_naive = IFNg_naive, 
+de_results <- list(IFNg_naive = IFNg_naive, 
                    IFNg_both = IFNg_both, 
                    Salm_naive = Salm_naive, 
                    Salm_both = Salm_both)
+
+dde <- DeeDeeExperiment(de_results = de_results)
 ```
 
 # What DeeDee is for
@@ -206,7 +218,7 @@ When you want to compare results from multiple Differential Expression Analyses 
 # How to Install
 
 You can install the current development version from GitHub:
-```
+```{r, eval=FALSE}
 library("remotes")
 remotes::install_github("lea-rothoerl/DeeDee", 
                         dependencies = TRUE, build_vignettes = TRUE)
@@ -257,7 +269,7 @@ When `limma` is applied to analyze the raw data, `deedee_prepare` accepts the ou
 The function `deedee_scatter()` creates a scatterplot of logFC values of the genes in two input datasets. If the input DeeDee list contains more than two datasets (like our example `DeeDee_obj` does),  the `select1` (default = 1) and `select2` (default = 2) parameters specify which ones will be plotted (selected by list index). `deedee_scatter()` includes a `color_by` parameter that can be set to "pval1" (default) or "pval2". The points will be colored according to the color scheme given on the right side of the output. 
 
 ```{r, echo = TRUE, warning = FALSE, message = FALSE}
-deedee_scatter(data = DeeDee_obj, select1 = 2, select2 = 3, color_by = "pval1", pthresh = 0.05)
+deedee_scatter(dde = dde, select1 = 2, select2 = 3, color_by = "pval1", pthresh = 0.05)
 ```
 
 
@@ -267,7 +279,7 @@ deedee_scatter(data = DeeDee_obj, select1 = 2, select2 = 3, color_by = "pval1", 
 The function `deedee_heatmap()` creates a heatmap of the logFC values for all common genes in every input dataset. The color key is given on the right side of the plot. Additionally to the standard parameters explained in [Input](#what-to-provide), the function takes a numeric `show_first` value (default = 25), specifying the number of genes depicted (if the total number of genes is smaller than `show_first`, all genes are shown). It also digests a logical `show_gene_names` value (default = FALSE) that determines if the gene identifiers (rownames in `deedee_prepare` results) will be displayed in the heatmap, and a logical `show_na`, defining if genes with NAs (in less than half of the contrasts) are included. The distance measure (`dist`, values: `euclidean` (default), `manhattan`, `pearson`, `spearman`) and clustering method (`clust`, values: `single`, `complete`, `average` (default), `centroid`) can be chosen as well. 
 
 ```{r, echo = TRUE, warning = FALSE, message = FALSE}
-deedee_heatmap(data = DeeDee_obj, show_first = 25, show_gene_names = FALSE, dist = "manhattan", clust = "centroid", show_na = FALSE, pthresh = 0.05)
+deedee_heatmap(dde = dde, show_first = 25, show_gene_names = FALSE, dist = "manhattan", clust = "centroid", show_na = FALSE, pthresh = 0.05)
 ```
 
 Because the heatmap is produced with the [InteractiveComplexHeatmap](https://bioconductor.org/packages/release/bioc/html/InteractiveComplexHeatmap.html) package, a Shiny window with the heatmap and entailed interactivity can be opened by executing the command `InteractiveComplexHeatmap::ht_shiny(res)` to a result `res` of `deedee_heatmap()`. For more information, please refer to the [InteractiveComplexHeatmap Vignette](https://bioconductor.org/packages/release/bioc/vignettes/InteractiveComplexHeatmap/inst/doc/InteractiveComplexHeatmap.html).
@@ -289,7 +301,7 @@ The function `deedee_venn()` creates a Venn diagram depicting the overlaps of di
 The function `deedee_upset()` creates an UpSet plot depicting the overlaps of differentially expressed genes in the input datasets. Contrary to [`deedee_venn()`](#deedee-venn-diagram), the UpSet plot can compare multiple (and even more than four) datasets in a visually pleasing way. The parameter `mode` can be set to `up`, `down`, `both`, or `both_colored` (default), specifying if only up-regulated, down-regulated or both DE genes shall be depicted. If `both_colored` is chosen, the result is the same UpSet plot as for `both`, but the shares of the intersections where all samples have positive/negative logFC values are colored according to the color key. The minimum size for an intersection to be included in the plot can be defined via the parameter `min_setsize`, default is 10.
 
 ```{r, echo = TRUE, warning = FALSE, message = FALSE}
-deedee_upset(data = DeeDee_obj, mode = "both_colored", min_setsize = 15, pthresh = 0.05)
+deedee_upset(dde = dde, mode = "both_colored", min_setsize = 15, pthresh = 0.05)
 ```
 
 
@@ -300,13 +312,13 @@ deedee_upset(data = DeeDee_obj, mode = "both_colored", min_setsize = 15, pthresh
 The function `deedee_qq()` compares the statistical distributions of two input datasets. If the input data list contains more than two datasets (like our example `DeeDee_obj` does),  the `select1` (default = 1) and `select2` (default = 2) parameters specify which ones are to be used. If the resulting curve resembles a straight line with a slope of 1, the distributions are similar (perfect straight line = identical distributions). `deedee_qq()` includes a `color_by` parameter that can be set to `pval1` (default) or `pval2`. The points generating the curve will be colored according to the color key displayed on the right of the output. 
 
 ```{r, echo = TRUE, warning = FALSE, message = FALSE}
-deedee_qq(data = DeeDee_obj, select1 = 1, select2 = 3, color_by = "pval2", pthresh = 0.05)
+deedee_qq(dde = dde, select1 = 1, select2 = 3, color_by = "pval2", pthresh = 0.05)
 ```
 
 The function `deedee_qqmult()` makes the same calculations as `deedee_qq`, but it is capable of depicting multiple Q-Q lines of different contrasts against the same reference in one plot. The curves are then colored by contrast, a coloration by p-value, like what `deedee_qq()` allows for, is not possible with `deedee_qqmult()`.
 
 ```{r, echo = TRUE, warning = FALSE, message = FALSE}
-deedee_qqmult(data = DeeDee_obj, ref = 1, pthresh = 0.05)
+deedee_qqmult(dde = dde, ref = 1, pthresh = 0.05)
 ```
 
 
@@ -316,7 +328,7 @@ deedee_qqmult(data = DeeDee_obj, ref = 1, pthresh = 0.05)
 The function `deedee_cat()` creates a plot depicting Concordance At the Top curves for a reference contrast (parameter `ref`, select contrast by list index). For each contrast except the reference, a curve indicating the concordance of the top genes in the contrast's logFC-sorted gene list, against the reference's, is displayed. The argument `mode` specifies the way of sorting the genes: by highest (`up`, default), lowest (`down`) or highest absolute (`both`) logFC value. The highest rank for which the concordance is calculated is given by the `maxrank` (default = 1000) parameter. 
 
 ```{r, echo = TRUE, warning = FALSE, message = FALSE}
-deedee_cat(data = DeeDee_obj, ref = 2, maxrank = 800, pthresh = 0.05)
+deedee_cat(dde = dde, ref = 2, maxrank = 800, pthresh = 0.05)
 ```
 
 \pagebreak
@@ -325,7 +337,7 @@ deedee_cat(data = DeeDee_obj, ref = 2, maxrank = 800, pthresh = 0.05)
 `deedee_summary()` is the function to combine the results from the other DeeDee functions as a HTML document in a report-like manner. The function entails arguments to set the parameters for all included functions (for more information see the manual). The summary will be saved to a path specified with the argument `output_path` (default = "DeeDee_Summary.html" in the working directory). The parameter `overwrite` decides if a potentially existing document at the designated location will be overwritten (default = TRUE). Param `silent` can suppress messages (default = FALSE) and `open_file` decides if the resulting document will be opened (default = TRUE).
 
 ```{r, echo = TRUE, warning = FALSE, message = FALSE, eval = FALSE}
-deedee_summary(deedee_list = DeeDee_obj,
+deedee_summary(dde = dde,
                output_path = "DeeDee_Summary.html",
                overwrite = FALSE,
                pthresh = 0.05,
