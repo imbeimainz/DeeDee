@@ -65,7 +65,17 @@ test_that("creating", {
   expect_length(dea(dde_one), 1)
 
   expect_true("salmo_both" == names(dea(dde_one)))
-
+  
+  dea1 <- de_limma
+  de_res_list <- list(de_deseq = salmo_both,
+                      dge_lrt =dea1)
+  
+  dde_list <- DeeDeeExperiment(de_results = de_res_list)
+  
+  expect_warning(get_dea_list(dde_list))
+  
+  expect_warning(get_dea_df(dde_list, dea_name = "dge_lrt"))
+  
 }
 
 )

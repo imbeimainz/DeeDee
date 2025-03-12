@@ -20,6 +20,8 @@
 #' the `DeeDee` package (currently: results from DESeq2, edgeR, limma).
 #' @param dea_name Character value, specifying the name of the DE analysis to
 #' get or remove
+#' @param verbose Logical, whether or not to display warnings. If TRUE, warnings/messages
+#' will be displayed. If FALSE, the function runs silently
 #'
 #' @return Return value varies depending on the individual methods, as described
 #' below.

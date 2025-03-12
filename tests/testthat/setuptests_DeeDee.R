@@ -14,3 +14,5 @@ se_macrophage_noassays <- SummarizedExperiment(
 
 names(de_named_list)
 
+data("de_limma", package = "DeeDee")
+
