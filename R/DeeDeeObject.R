@@ -1,6 +1,6 @@
 #' DeeDeeObject (S4 class)
 #'
-#' @slot DeeDeeList
+#' @slot DeeDeeList A DeeDeeList object
 #'
 #' @description DeeDeeObject is the format that the DeeDee App works on. It
 #'              holds a slot for your list of DeeDee tables. More functionality

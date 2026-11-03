@@ -13,7 +13,7 @@ to come.
 \section{Slots}{
 
 \describe{
-\item{\code{DeeDeeList}}{}
+\item{\code{DeeDeeList}}{A DeeDeeList object}
 }}
 
 \examples{

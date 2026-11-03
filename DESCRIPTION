@@ -21,7 +21,6 @@ Description: DeeDee is a collection of functions to compare the results of two
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.1.2
 Depends:
     R (>= 4.1.0)
 Imports: 
@@ -64,3 +63,4 @@ Config/testthat/edition: 3
 VignetteBuilder: knitr
 biocViews: GUI, GeneExpression, Software, Transcription, Transcriptomics, 
     Visualization, DifferentialExpression
+Config/roxygen2/version: 8.1.0

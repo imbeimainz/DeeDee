@@ -2,6 +2,8 @@
 % Please edit documentation in R/deedee-pkg.R
 \docType{package}
 \name{DeeDee-pkg}
+\alias{DeeDee}
+\alias{DeeDee-package}
 \alias{DeeDee-pkg}
 \title{DeeDee}
 \description{
@@ -13,4 +15,14 @@ DEA results.
 multiple functions that create graphical output and give an impression of
 similarities and differences in the expression profiles. The functions are
 contained individually as well as included in an interactive Shiny Web App.
+}
+\author{
+\strong{Maintainer}: Lea Rothörl \email{lea.rothoerl@posteo.de} (\href{https://orcid.org/0000-0003-2554-0583}{ORCID})
+
+Authors:
+\itemize{
+  \item Lea Rothörl \email{lea.rothoerl@posteo.de} (\href{https://orcid.org/0000-0003-2554-0583}{ORCID})
+  \item Federico Marini \email{marinif@uni-mainz.de} (\href{https://orcid.org/0000-0003-3252-7758}{ORCID})
+}
+
 }
